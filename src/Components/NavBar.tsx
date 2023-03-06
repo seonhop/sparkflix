@@ -18,6 +18,7 @@ const Nav = styled(motion.nav)`
 	font-size: 0.9rem;
 	color: ${(props) => props.theme.white.darker};
 	padding: 0 3.5rem;
+	z-index: 99;
 `;
 
 const NavCol = styled.div`

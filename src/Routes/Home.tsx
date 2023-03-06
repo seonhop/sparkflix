@@ -7,6 +7,7 @@ import { makeImagePath } from "../utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
+import { favMovieIDs, favMovieDict } from "../favMovies";
 
 const Container = styled.div`
 	display: flex;
@@ -79,6 +80,7 @@ const Row = styled(motion.div)`
 	grid-template-columns: repeat(6, 1fr);
 	position: absolute;
 	width: 100%;
+	padding: 0 3.5rem;
 `;
 
 const rowVariants = {
@@ -93,12 +95,87 @@ const rowVariants = {
 	},
 };
 
-const Box = styled(motion.div)<{ bgPhoto: string }>`
-	background-image: url(${(props) => props.bgPhoto});
+const Box = styled(motion.div)`
+	height: 150px;
+	:first-child {
+		transform-origin: center left;
+	}
+	:last-child {
+		transform-origin: center right;
+	}
+	:hover {
+		cursor: pointer;
+	}
+`;
+
+const boxVariants = {
+	normal: {
+		scale: 1,
+		transitionEnd: { zIndex: 1 },
+		zIndex: 1,
+	},
+	hover: {
+		zIndex: 2,
+		scale: 1.3,
+		y: -80,
+		transition: {
+			delay: 0.5,
+			duration: 0.1,
+			type: "tween",
+		},
+	},
+};
+
+const BoxImgContainer = styled(motion.div)<{
+	bgphoto?: string;
+	pos: (string | number)[];
+	transform: (string | number)[];
+	logoWidth: string;
+}>`
+	position: relative;
 	background-size: cover;
 	background-position: center center;
-	height: 200px;
+
+	> img:first-child {
+		max-width: 100%;
+		max-height: 100%;
+	}
+	> img:last-child {
+		position: absolute;
+		top: ${(props) => props.pos[0]}l;
+		right: ${(props) => props.pos[1]};
+		bottom: ${(props) => props.pos[2]};
+		left: ${(props) => props.pos[3]};
+		width: ${(props) => props.logoWidth};
+		transform: translate(
+			${(props) => props.transform[0]},
+			${(props) => props.transform[1]}
+		);
+	}
 `;
+
+const Info = styled(motion.div)`
+	padding: 10px;
+	background-color: ${(props) => props.theme.black.lighter};
+	opacity: 0;
+	width: 100%;
+	bottom: 0;
+	h4 {
+		text-align: center;
+		font-size: 18px;
+	}
+`;
+
+const infoVariants = {
+	hover: {
+		opacity: 1,
+		transition: {
+			delay: 0.5,
+			duaration: 0.1,
+			type: "tween",
+		},
+	},
+};
 
 const SPIDERMAN_ID = 324857;
 
@@ -113,6 +190,7 @@ function Home() {
 		() => getMovieDetail(SPIDERMAN_ID)
 	);
 
+	/* 	
 	const { data: heroMovieImages, isLoading: isImagesLoading } =
 		useQuery<IGetImagesResult>(
 			["images", "highestRatingMovie"],
@@ -120,6 +198,11 @@ function Home() {
 			{
 				enabled: !!getMoviesResult?.results, // Only run if getMoviesResult has data
 			}
+	); 
+	*/
+	const { data: heroMovieImages, isLoading: isImagesLoading } =
+		useQuery<IGetImagesResult>(["images", "highestRatingMovie"], () =>
+			getImages(SPIDERMAN_ID)
 		);
 
 	const [index, setIndex] = useState(0);
@@ -128,7 +211,7 @@ function Home() {
 		if (getMoviesResult) {
 			if (leaving) return;
 			toggleLeaving();
-			const totalMovies = getMoviesResult.results.length - 1;
+			const totalMovies = favMovieIDs.length;
 			const maxIndex = Math.floor(totalMovies / offset) - 1;
 			setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
 		}
@@ -140,6 +223,12 @@ function Home() {
 	const margin = -window.innerHeight * 0.15;
 	const offset = 6;
 	console.log(index);
+	const { data: favMovieImages } = useQuery(["data", favMovieIDs], async () => {
+		const promises = favMovieIDs.map((favmovie) => getImages(favmovie.id));
+		return Promise.all(promises);
+	});
+	console.log(favMovieIDs.length);
+	console.log(favMovieImages);
 	return (
 		<Container>
 			{isLoading ? (
@@ -157,8 +246,6 @@ function Home() {
 								src={makeImagePath(heroMovieImages?.logos[0].file_path || "")}
 							/>
 						</HeroTitleContainer>
-
-						<HeroOverview>{spidermanResult?.overview}</HeroOverview>
 					</Hero>
 					<Slider margin={margin}>
 						<AnimatePresence initial={false} onExitComplete={toggleLeaving}>
@@ -170,14 +257,41 @@ function Home() {
 								key={index}
 								transition={{ type: "tween", duration: 1 }}
 							>
-								{getMoviesResult?.results
-									.slice(offset * index, offset * index + offset)
+								{favMovieImages
+									?.slice(offset * index, offset * index + offset)
 									.map((movie) => (
 										<Box
+											variants={boxVariants}
+											initial="normal"
+											whileHover="hover"
+											transition={{ type: "tween" }}
 											key={movie.id}
-											bgPhoto={makeImagePath(movie.backdrop_path || "", "w500")}
 										>
-											{movie.title}
+											<BoxImgContainer
+												pos={favMovieDict[String(movie.id)].pos}
+												transform={favMovieDict[String(movie.id)].transform}
+												logoWidth={favMovieDict[String(movie.id)].logoWidth}
+											>
+												<img
+													src={makeImagePath(
+														movie.backdrops[0].file_path || "",
+														"w500"
+													)}
+												/>
+												{movie.logos[0].file_path ? (
+													<img
+														src={makeImagePath(
+															movie.logos[0].file_path,
+															"w500"
+														)}
+													/>
+												) : (
+													<h1>{movie.title}</h1>
+												)}
+											</BoxImgContainer>
+											<Info variants={infoVariants}>
+												<h4>{favMovieDict[String(movie.id)].title}</h4>
+											</Info>
 										</Box>
 									))}
 							</Row>
