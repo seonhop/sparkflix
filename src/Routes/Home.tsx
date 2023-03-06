@@ -4,12 +4,16 @@ import { getMovies, getMovieDetail, getImages } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 
 const Container = styled.div`
 	display: flex;
 	flex-direction: column;
 	width: 100%;
 	height: 200vh;
+	overflow-x: hidden;
 `;
 
 const Span = styled.span`
@@ -40,8 +44,13 @@ const Hero = styled.div<{ bgPhoto: string }>`
 	background-size: cover;
 `;
 
+const HeroTitleContainer = styled.div`
+	width: 20%;
+`;
+
 const HeroTitle = styled.img`
-	width: 35%;
+	max-width: 100%;
+	max-height: 100%;
 `;
 
 const HeroInfoContainer = styled.div`
@@ -59,39 +68,78 @@ const HeroOverview = styled.p`
 	text-overflow: ellipsis;
 `;
 
+const Slider = styled.div<{ margin: number }>`
+	position: relative;
+	top: ${(props) => props.margin}px;
+`;
+
+const Row = styled(motion.div)`
+	display: grid;
+	gap: 0.5rem;
+	grid-template-columns: repeat(6, 1fr);
+	position: absolute;
+	width: 100%;
+`;
+
+const rowVariants = {
+	hidden: {
+		x: `calc(${window.outerWidth}px + 0.5rem)`,
+	},
+	visible: {
+		x: 0,
+	},
+	exit: {
+		x: `calc(-${window.outerWidth}px - 0.5rem)`,
+	},
+};
+
+const Box = styled(motion.div)<{ bgPhoto: string }>`
+	background-image: url(${(props) => props.bgPhoto});
+	background-size: cover;
+	background-position: center center;
+	height: 200px;
+`;
+
+const SPIDERMAN_ID = 324857;
+
 function Home() {
 	const { data: getMoviesResult, isLoading } = useQuery<IGetMoviesResult>(
 		["movies", "nowPlaying"],
 		getMovies
 	);
-	const { data: highestRatingMovieImages, isLoading: isImagesLoading } =
+	console.log("here", getMoviesResult);
+	const { data: spidermanResult } = useQuery<IGetMovieDetailResult>(
+		["movies", "spiderman-into-the-spiderverse"],
+		() => getMovieDetail(SPIDERMAN_ID)
+	);
+
+	const { data: heroMovieImages, isLoading: isImagesLoading } =
 		useQuery<IGetImagesResult>(
 			["images", "highestRatingMovie"],
-			() => {
-				const highestRatingMovie = getMoviesResult?.results.reduce(
-					(prev, current) => {
-						return prev.vote_count > current.vote_count ? prev : current;
-					}
-				);
-
-				return getImages(highestRatingMovie?.id || 0);
-			},
+			() => getImages(SPIDERMAN_ID),
 			{
 				enabled: !!getMoviesResult?.results, // Only run if getMoviesResult has data
 			}
 		);
 
-	const highestRatingMovie = getMoviesResult?.results.reduce(
-		(highest, current) => {
-			if (current.vote_average > highest.vote_average) {
-				return current;
-			} else {
-				return highest;
-			}
+	const [index, setIndex] = useState(0);
+	const [leaving, setLeaving] = useState(false);
+	const increaseIndex = () => {
+		if (getMoviesResult) {
+			if (leaving) return;
+			toggleLeaving();
+			const totalMovies = getMoviesResult.results.length - 1;
+			const maxIndex = Math.floor(totalMovies / offset) - 1;
+			setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
 		}
-	);
-	console.log(highestRatingMovieImages);
+	};
+	const toggleLeaving = () => {
+		setLeaving((prev) => !prev);
+	};
 
+	const margin = -window.innerHeight * 0.15;
+	const offset = 6;
+	console.log(index);
 	return (
 		<Container>
 			{isLoading ? (
@@ -99,17 +147,42 @@ function Home() {
 			) : (
 				<>
 					<Hero
+						onClick={increaseIndex}
 						bgPhoto={makeImagePath(
-							highestRatingMovieImages?.backdrops[0].file_path || ""
+							heroMovieImages?.backdrops[0].file_path || ""
 						)}
 					>
-						<HeroTitle
-							src={makeImagePath(
-								highestRatingMovieImages?.logos[0].file_path || ""
-							)}
-						/>
-						<HeroOverview>{highestRatingMovie?.overview}</HeroOverview>
+						<HeroTitleContainer>
+							<HeroTitle
+								src={makeImagePath(heroMovieImages?.logos[0].file_path || "")}
+							/>
+						</HeroTitleContainer>
+
+						<HeroOverview>{spidermanResult?.overview}</HeroOverview>
 					</Hero>
+					<Slider margin={margin}>
+						<AnimatePresence initial={false} onExitComplete={toggleLeaving}>
+							<Row
+								variants={rowVariants}
+								initial="hidden"
+								animate="visible"
+								exit="exit"
+								key={index}
+								transition={{ type: "tween", duration: 1 }}
+							>
+								{getMoviesResult?.results
+									.slice(offset * index, offset * index + offset)
+									.map((movie) => (
+										<Box
+											key={movie.id}
+											bgPhoto={makeImagePath(movie.backdrop_path || "", "w500")}
+										>
+											{movie.title}
+										</Box>
+									))}
+							</Row>
+						</AnimatePresence>
+					</Slider>
 				</>
 			)}
 		</Container>

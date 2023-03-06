@@ -71,6 +71,9 @@ const GlobalStyle = createGlobalStyle`
 		display: flex;
 		flex-direction: row;		
 	}
+	::-webkit-scrollbar {
+		display: none;
+	}
 `;
 
 function App() {
