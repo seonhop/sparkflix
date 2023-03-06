@@ -24,3 +24,9 @@ export function getMovieDetail(movie_id: number) {
 		`${BASE_PATH}/movie/${movie_id}?api_key=${API_KEY}&language=en`
 	).then((response) => response.json());
 }
+
+export function getSearchResults(query: string) {
+	return fetch(
+		`${BASE_PATH}/search/multi?api_key=${API_KEY}&query=${query}`
+	).then((response) => response.json());
+}

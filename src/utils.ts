@@ -3,3 +3,6 @@ export function makeImagePath(imageId: string, format?: string) {
 		format ? format : "original"
 	}/${imageId}`;
 }
+
+export const OFF_SET = 6;
+export const SPIDERMAN_ID = 324857;

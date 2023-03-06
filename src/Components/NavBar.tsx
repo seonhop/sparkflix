@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import { Link, useMatch } from "react-router-dom";
+import { Link, useMatch, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import {
 	motion,
 	useAnimation,
@@ -69,7 +70,7 @@ const NavColItem = styled.li`
 	}
 `;
 
-const Search = styled.span`
+const Search = styled.form`
 	color: white;
 	display: flex;
 	align-items: center;
@@ -101,7 +102,7 @@ const Circle = styled(motion.span)`
 
 const SearchIcon = styled(motion.span)``;
 
-const SearchBar = styled(motion.div)`
+const SearchBar = styled(motion.form)`
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -128,8 +129,13 @@ const navVariants = {
 	},
 };
 
+interface IForm {
+	keyword: string;
+}
+
 function NavBar() {
 	const homeMatch = useMatch("/");
+	const navigate = useNavigate();
 	const tvMatch = useMatch("/tv");
 	const [searchOpen, setSearchOpen] = useState(false);
 	const searchBarAni = useAnimation();
@@ -152,6 +158,11 @@ function NavBar() {
 		} else {
 			searchBarAni.start({ scaleX: 1 });
 		}
+	};
+
+	const { register, handleSubmit } = useForm<IForm>();
+	const onValid = (data: IForm) => {
+		navigate(`/search?keyword=${data.keyword}`);
 	};
 
 	return (
@@ -191,7 +202,11 @@ function NavBar() {
 					</SearchIcon>
 				) : null}
 				{searchOpen ? (
-					<SearchBar animate={searchBarAni} transition={{ type: "linear" }}>
+					<SearchBar
+						animate={searchBarAni}
+						transition={{ type: "linear" }}
+						onSubmit={handleSubmit(onValid)}
+					>
 						<SearchIcon
 							className="material-symbols-outlined"
 							onClick={onClickSearch}
@@ -200,6 +215,7 @@ function NavBar() {
 							search
 						</SearchIcon>
 						<Input
+							{...register("keyword", { required: true, minLength: 2 })}
 							transition={{ delay: 1 }}
 							placeholder="Title, Genre, Actor..."
 						/>

@@ -5,7 +5,7 @@ import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { favMovieIDs, favMovieDict } from "../favMovies";
 import {
@@ -15,6 +15,9 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
+import { OFF_SET, SPIDERMAN_ID } from "../utils";
+import { HeroSlider } from "../Components/Slider";
+import { dir } from "console";
 
 const Container = styled.div`
 	display: flex;
@@ -81,6 +84,40 @@ const Slider = styled.div<{ margin: number }>`
 	top: ${(props) => props.margin}px;
 `;
 
+type ISliderBtnPos = "left" | "right";
+
+const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
+	opacity: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	position: absolute;
+	width: 3.5rem;
+	height: 120px;
+	display: flex;
+	left: ${(props) => (props.pos === "left" ? 0 : "none")};
+	right: ${(props) => (props.pos === "right" ? 0 : "none")};
+	justify-content: center;
+	align-items: center;
+	font-size: 48px;
+	:hover {
+		cursor: pointer;
+	}
+`;
+
+const sliderBtnVariants = {
+	hidden: {
+		opacity: 0,
+	},
+	hover: {
+		opacity: 1,
+		transition: {
+			duaration: 0,
+			type: "tween",
+		},
+	},
+};
+
+const SliderBtnIcon = styled(motion.span)``;
+
 const Row = styled(motion.div)`
 	display: grid;
 	gap: 0.5rem;
@@ -91,6 +128,27 @@ const Row = styled(motion.div)`
 `;
 
 const rowVariants = {
+	hidden: (dirRight: boolean) => ({
+		x: dirRight
+			? `calc(${window.outerWidth}px + 0.5rem)`
+			: `calc(-${window.outerWidth}px - 0.5rem)`,
+	}),
+	visible: {
+		x: 0,
+	},
+	exit: (dirRight: boolean) => ({
+		x: dirRight
+			? `calc(-${window.outerWidth}px - 0.5rem)`
+			: `calc(${window.outerWidth}px + 0.5rem)`,
+	}),
+	hover: {
+		transition: {
+			duration: 0,
+		},
+	},
+};
+
+const newRowVariants = {
 	hidden: {
 		x: `calc(${window.outerWidth}px + 0.5rem)`,
 	},
@@ -100,10 +158,14 @@ const rowVariants = {
 	exit: {
 		x: `calc(-${window.outerWidth}px - 0.5rem)`,
 	},
+	hover: {
+		transition: {
+			duration: 0,
+		},
+	},
 };
 
 const Box = styled(motion.div)`
-	height: 150px;
 	display: flex;
 	flex-direction: column;
 	gap: 0;
@@ -129,7 +191,7 @@ const boxVariants = {
 		scale: 1.3,
 		y: -80,
 		transition: {
-			delay: 0.5,
+			delay: 1.2,
 			duration: 0.1,
 			type: "tween",
 		},
@@ -145,9 +207,9 @@ const BoxImgContainer = styled(motion.div)<{
 	position: relative;
 	background-size: cover;
 	background-position: center center;
+	height: 120px;
 
 	> img:first-child {
-		max-width: 100%;
 		max-height: 100%;
 	}
 	> img:last-child {
@@ -186,10 +248,9 @@ const infoVariants = {
 	},
 };
 
-const SPIDERMAN_ID = 324857;
-
 function Home() {
 	const navigate = useNavigate();
+	const [dirRight, setDirRight] = useState(true);
 	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
 	const { scrollY } = useScroll();
 
@@ -202,16 +263,6 @@ function Home() {
 		() => getMovieDetail(SPIDERMAN_ID)
 	);
 
-	/* 	
-	const { data: heroMovieImages, isLoading: isImagesLoading } =
-		useQuery<IGetImagesResult>(
-			["images", "highestRatingMovie"],
-			() => getImages(SPIDERMAN_ID),
-			{
-				enabled: !!getMoviesResult?.results, // Only run if getMoviesResult has data
-			}
-	); 
-	*/
 	const { data: heroMovieImages, isLoading: isImagesLoading } =
 		useQuery<IGetImagesResult>(["images", "highestRatingMovie"], () =>
 			getImages(SPIDERMAN_ID)
@@ -224,17 +275,32 @@ function Home() {
 			if (leaving) return;
 			toggleLeaving();
 			const totalMovies = favMovieIDs.length;
-			const maxIndex = Math.floor(totalMovies / offset) - 1;
+			const maxIndex = Math.floor(totalMovies / OFF_SET) - 1;
 			setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
 		}
 	};
+	const manipulateIndex = (sliderBtnPos: ISliderBtnPos) => {
+		if (getMoviesResult) {
+			if (leaving) return;
+			toggleLeaving();
+			const totalMovies = favMovieIDs.length;
+			const maxIndex = Math.floor(totalMovies / OFF_SET) - 1;
+			if (sliderBtnPos === "left") {
+				setIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
+				setDirRight(false);
+			} else {
+				setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
+				setDirRight(true);
+			}
+		}
+	};
+
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
 
 	const margin = -window.innerHeight * 0.15;
 	const offset = 6;
-	console.log(index);
 	const { data: favMovieImages } = useQuery<IGetImagesResult[]>(
 		["favMovieImages", favMovieIDs],
 		async () => {
@@ -251,8 +317,7 @@ function Home() {
 			return Promise.all(promises);
 		}
 	);
-	console.log(favMovieImages);
-	console.log(favMovieDetailResult);
+
 	const favMovieDetailDict = favMovieDetailResult?.reduce((acc, movie) => {
 		acc[+movie.id] = movie;
 		return acc;
@@ -261,78 +326,107 @@ function Home() {
 	const onBoxClicked = (movieId: string) => {
 		navigate(`/movies/${movieId}`);
 	};
-
+	console.log(index);
 	return (
 		<Container>
 			{isLoading ? (
 				<Loader />
 			) : (
-				<>
-					<Hero
-						onClick={increaseIndex}
-						bgPhoto={makeImagePath(
-							heroMovieImages?.backdrops[0].file_path || ""
-						)}
-					>
-						<HeroTitleContainer>
-							<HeroTitle
-								src={makeImagePath(heroMovieImages?.logos[0].file_path || "")}
-							/>
-						</HeroTitleContainer>
-					</Hero>
-					<Slider margin={margin}>
-						<AnimatePresence initial={false} onExitComplete={toggleLeaving}>
-							<Row
-								variants={rowVariants}
-								initial="hidden"
-								animate="visible"
-								exit="exit"
-								key={index}
-								transition={{ type: "tween", duration: 1 }}
+				favMovieImages && (
+					<>
+						<Hero
+							onClick={increaseIndex}
+							bgPhoto={makeImagePath(
+								heroMovieImages?.backdrops[0].file_path || ""
+							)}
+						>
+							<HeroTitleContainer>
+								<HeroTitle
+									src={makeImagePath(heroMovieImages?.logos[0].file_path || "")}
+								/>
+							</HeroTitleContainer>
+						</Hero>
+						<Slider margin={margin}>
+							<AnimatePresence
+								initial={false}
+								onExitComplete={toggleLeaving}
+								custom={dirRight}
 							>
-								{favMovieImages
-									?.slice(offset * index, offset * index + offset)
-									.map((movie) => (
-										<Box
-											variants={boxVariants}
-											initial="normal"
-											whileHover="hover"
-											transition={{ type: "tween" }}
-											key={movie.id}
-											onClick={() => onBoxClicked(movie.id + "")}
-										>
-											<BoxImgContainer
-												pos={favMovieDict[String(movie.id)].pos}
-												transform={favMovieDict[String(movie.id)].transform}
-												logowidth={favMovieDict[String(movie.id)].logoWidth}
+								<Row
+									variants={rowVariants}
+									initial="hidden"
+									animate="visible"
+									whileHover="hover"
+									exit="exit"
+									key={index}
+									transition={{ type: "tween", duration: 1 }}
+									custom={dirRight}
+								>
+									{favMovieImages
+										?.slice(offset * index, offset * index + offset)
+										.map((movie) => (
+											<Box
+												variants={boxVariants}
+												initial="normal"
+												whileHover="hover"
+												transition={{ type: "tween" }}
+												key={movie.id}
+												onClick={() => onBoxClicked(movie.id + "")}
 											>
-												<img
-													src={makeImagePath(
-														movie.backdrops[0].file_path ||
-															movie.posters[0].file_path,
-														"w500"
-													)}
-												/>
-												{movie.logos[0].file_path ? (
+												<BoxImgContainer
+													pos={favMovieDict[String(movie.id)].pos}
+													transform={favMovieDict[String(movie.id)].transform}
+													logowidth={favMovieDict[String(movie.id)].logoWidth}
+												>
 													<img
 														src={makeImagePath(
-															movie.logos[0].file_path,
+															movie.backdrops[0].file_path ||
+																movie.posters[0].file_path,
 															"w500"
 														)}
 													/>
-												) : (
-													<h1>{favMovieDict[String(movie.id)].title}</h1>
-												)}
-											</BoxImgContainer>
-											<Info variants={infoVariants}>
-												<h4>{favMovieDict[String(movie.id)].title}</h4>
-											</Info>
-										</Box>
-									))}
-							</Row>
-						</AnimatePresence>
-					</Slider>
-				</>
+													{movie.logos[0].file_path ? (
+														<img
+															src={makeImagePath(
+																movie.logos[0].file_path,
+																"w500"
+															)}
+														/>
+													) : (
+														<h1>{favMovieDict[String(movie.id)].title}</h1>
+													)}
+												</BoxImgContainer>
+												<Info variants={infoVariants}>
+													<h4>{favMovieDict[String(movie.id)].title}</h4>
+												</Info>
+											</Box>
+										))}
+									<SliderBtn
+										variants={sliderBtnVariants}
+										transition={{ type: "tween" }}
+										pos="left"
+										onClick={() => manipulateIndex("left")}
+									>
+										<SliderBtnIcon className="material-icons">
+											arrow_back_ios
+										</SliderBtnIcon>
+									</SliderBtn>
+
+									<SliderBtn
+										variants={sliderBtnVariants}
+										transition={{ type: "tween" }}
+										pos="right"
+										onClick={() => manipulateIndex("right")}
+									>
+										<SliderBtnIcon className="material-icons">
+											arrow_forward_ios
+										</SliderBtnIcon>
+									</SliderBtn>
+								</Row>
+							</AnimatePresence>
+						</Slider>
+					</>
+				)
 			)}
 			<Outlet context={{ fetchedDetailDict: favMovieDetailDict }} />
 		</Container>

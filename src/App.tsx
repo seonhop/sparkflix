@@ -59,7 +59,7 @@ const GlobalStyle = createGlobalStyle`
 	}
 	body {
 		font-family: 'Open Sans', sans-serif;
-		background-color: black;
+		background-color: ${(props) => props.theme.black.darker};
 		color: ${(props) => props.theme.white.darker};
 
 	}
