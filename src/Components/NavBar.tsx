@@ -14,7 +14,7 @@ const Nav = styled(motion.nav)`
 	align-items: center;
 	position: fixed;
 	width: 100%;
-	height: 10vh;
+	height: 5rem;
 	font-size: 0.9rem;
 	color: ${(props) => props.theme.white.darker};
 	padding: 0 3.5rem;
@@ -135,7 +135,11 @@ function NavBar() {
 	const navBarAni = useAnimation();
 	const { scrollY } = useScroll();
 	useMotionValueEvent(scrollY, "change", (latest) => {
-		console.log(latest);
+		if (scrollY.get() > 80) {
+			navBarAni.start("scroll");
+		} else {
+			navBarAni.start("top");
+		}
 	});
 
 	const onClickSearch = () => {
@@ -148,15 +152,6 @@ function NavBar() {
 			searchBarAni.start({ scaleX: 1 });
 		}
 	};
-	useEffect(() => {
-		scrollY.onChange(() => {
-			if (scrollY.get() > 80) {
-				navBarAni.start("scroll");
-			} else {
-				navBarAni.start("top");
-			}
-		});
-	}, [scrollY, navBarAni]);
 
 	return (
 		<Nav variants={navVariants} animate={navBarAni} initial={"top"}>
