@@ -4,6 +4,7 @@ import App from "./App";
 import Home from "./Routes/Home";
 import Tv from "./Routes/Tv";
 import Search from "./Routes/Search";
+import MovieModal from "./Components/MovieModal";
 
 const router = createBrowserRouter(
 	[
@@ -14,6 +15,12 @@ const router = createBrowserRouter(
 				{
 					path: "",
 					element: <Home />,
+					children: [
+						{
+							path: "/movies/:movieId",
+							element: <MovieModal />,
+						},
+					],
 				},
 				{
 					path: "/tv",

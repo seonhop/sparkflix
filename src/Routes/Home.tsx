@@ -4,10 +4,17 @@ import { getMovies, getMovieDetail, getImages } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { favMovieIDs, favMovieDict } from "../favMovies";
+import {
+	Outlet,
+	useNavigate,
+	useMatch,
+	PathMatch,
+	useOutletContext,
+} from "react-router-dom";
 
 const Container = styled.div`
 	display: flex;
@@ -97,6 +104,9 @@ const rowVariants = {
 
 const Box = styled(motion.div)`
 	height: 150px;
+	display: flex;
+	flex-direction: column;
+	gap: 0;
 	:first-child {
 		transform-origin: center left;
 	}
@@ -130,7 +140,7 @@ const BoxImgContainer = styled(motion.div)<{
 	bgphoto?: string;
 	pos: (string | number)[];
 	transform: (string | number)[];
-	logoWidth: string;
+	logowidth: string;
 }>`
 	position: relative;
 	background-size: cover;
@@ -146,7 +156,7 @@ const BoxImgContainer = styled(motion.div)<{
 		right: ${(props) => props.pos[1]};
 		bottom: ${(props) => props.pos[2]};
 		left: ${(props) => props.pos[3]};
-		width: ${(props) => props.logoWidth};
+		width: ${(props) => props.logowidth};
 		transform: translate(
 			${(props) => props.transform[0]},
 			${(props) => props.transform[1]}
@@ -159,7 +169,6 @@ const Info = styled(motion.div)`
 	background-color: ${(props) => props.theme.black.lighter};
 	opacity: 0;
 	width: 100%;
-	bottom: 0;
 	h4 {
 		text-align: center;
 		font-size: 18px;
@@ -180,11 +189,14 @@ const infoVariants = {
 const SPIDERMAN_ID = 324857;
 
 function Home() {
+	const navigate = useNavigate();
+	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
+	const { scrollY } = useScroll();
+
 	const { data: getMoviesResult, isLoading } = useQuery<IGetMoviesResult>(
 		["movies", "nowPlaying"],
 		getMovies
 	);
-	console.log("here", getMoviesResult);
 	const { data: spidermanResult } = useQuery<IGetMovieDetailResult>(
 		["movies", "spiderman-into-the-spiderverse"],
 		() => getMovieDetail(SPIDERMAN_ID)
@@ -223,12 +235,33 @@ function Home() {
 	const margin = -window.innerHeight * 0.15;
 	const offset = 6;
 	console.log(index);
-	const { data: favMovieImages } = useQuery(["data", favMovieIDs], async () => {
-		const promises = favMovieIDs.map((favmovie) => getImages(favmovie.id));
-		return Promise.all(promises);
-	});
-	console.log(favMovieIDs.length);
+	const { data: favMovieImages } = useQuery<IGetImagesResult[]>(
+		["favMovieImages", favMovieIDs],
+		async () => {
+			const promises = favMovieIDs.map((favmovie) => getImages(favmovie.id));
+			return Promise.all(promises);
+		}
+	);
+	const { data: favMovieDetailResult } = useQuery<IGetMovieDetailResult[]>(
+		["favMovieDetailResult", favMovieIDs],
+		async () => {
+			const promises = favMovieIDs.map((favmovie) =>
+				getMovieDetail(favmovie.id)
+			);
+			return Promise.all(promises);
+		}
+	);
 	console.log(favMovieImages);
+	console.log(favMovieDetailResult);
+	const favMovieDetailDict = favMovieDetailResult?.reduce((acc, movie) => {
+		acc[+movie.id] = movie;
+		return acc;
+	}, {} as { [key: string]: IGetMovieDetailResult });
+
+	const onBoxClicked = (movieId: string) => {
+		navigate(`/movies/${movieId}`);
+	};
+
 	return (
 		<Container>
 			{isLoading ? (
@@ -266,15 +299,17 @@ function Home() {
 											whileHover="hover"
 											transition={{ type: "tween" }}
 											key={movie.id}
+											onClick={() => onBoxClicked(movie.id + "")}
 										>
 											<BoxImgContainer
 												pos={favMovieDict[String(movie.id)].pos}
 												transform={favMovieDict[String(movie.id)].transform}
-												logoWidth={favMovieDict[String(movie.id)].logoWidth}
+												logowidth={favMovieDict[String(movie.id)].logoWidth}
 											>
 												<img
 													src={makeImagePath(
-														movie.backdrops[0].file_path || "",
+														movie.backdrops[0].file_path ||
+															movie.posters[0].file_path,
 														"w500"
 													)}
 												/>
@@ -286,7 +321,7 @@ function Home() {
 														)}
 													/>
 												) : (
-													<h1>{movie.title}</h1>
+													<h1>{favMovieDict[String(movie.id)].title}</h1>
 												)}
 											</BoxImgContainer>
 											<Info variants={infoVariants}>
@@ -299,6 +334,7 @@ function Home() {
 					</Slider>
 				</>
 			)}
+			<Outlet context={{ fetchedDetailDict: favMovieDetailDict }} />
 		</Container>
 	);
 }
