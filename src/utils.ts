@@ -6,3 +6,4 @@ export function makeImagePath(imageId: string, format?: string) {
 
 export const OFF_SET = 6;
 export const SPIDERMAN_ID = 324857;
+export const SLIDER_MARGIN = -window.innerHeight * 0.15;
