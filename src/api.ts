@@ -31,6 +31,12 @@ export function getCredits(movie_id: number) {
 	).then((response) => response.json());
 }
 
+export function getReviews(movie_id: number) {
+	return fetch(
+		`${BASE_PATH}/movie/${movie_id}/reviews?api_key=${API_KEY}&language=en-US`
+	).then((response) => response.json());
+}
+
 export function getMovieDetail(movie_id: number) {
 	return fetch(
 		`${BASE_PATH}/movie/${movie_id}?api_key=${API_KEY}&language=en`

@@ -10,7 +10,7 @@ import {
 	formatTime,
 	formatRating,
 	formatGenres,
-	NEXFLIX_LOGO_URL,
+	NETFLIX_LOGO_URL,
 } from "../utils";
 import { useNavigate } from "react-router-dom";
 import { favMovieDict } from "../favMovies";
@@ -212,6 +212,9 @@ const Info = styled(motion.div)`
 `;
 
 const infoVariants = {
+	hidden: {
+		opacity: 1,
+	},
 	hover: {
 		opacity: 1,
 		scale: 0.9,
@@ -347,7 +350,8 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 		setLeaving((prev) => !prev);
 	};
 	const totalCast = cast.length;
-	const maxIndex = Math.floor(totalCast / OFF_SET) - 1;
+	const offset = 4;
+	const maxIndex = Math.floor(totalCast / offset) - 1;
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
 		if (cast) {
 			if (leaving) return;
@@ -382,7 +386,7 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 						custom={dirRight}
 					>
 						{cast
-							?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
+							?.slice(offset * index, offset * index + offset)
 							.map((each_cast, index) => (
 								<CastCard key={index}>
 									<React.Fragment>
@@ -395,7 +399,7 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 													)}
 												/>
 											) : (
-												<img src={NEXFLIX_LOGO_URL} />
+												<img src={NETFLIX_LOGO_URL} />
 											)}
 										</MotionDiv>
 

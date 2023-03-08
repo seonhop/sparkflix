@@ -15,17 +15,25 @@ import {
 	formatTime,
 	getReleaseYear,
 	formatGenres,
-	NEXFLIX_LOGO_URL,
+	NETFLIX_LOGO_URL,
+	formatCountry,
+	makeAvatarPath,
 } from "../utils";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { useQuery } from "react-query";
-import { getCredits, getImages, getMovieDetail } from "../api";
+import { getCredits, getImages, getMovieDetail, getReviews } from "../api";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
 import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
 import { Cast, IGetCredits } from "../Interfaces/API/IGetCredits";
 import React from "react";
 import { CastSlider } from "./Slider";
+import { click } from "@testing-library/user-event/dist/click";
+import { IGetReviews } from "../Interfaces/API/IGetReviews";
+
+const GlobalStyle = createGlobalStyle`
+  html{overflow: hidden;}
+`;
 
 const Overlay = styled(motion.div)`
 	position: fixed;
@@ -39,26 +47,44 @@ const Overlay = styled(motion.div)`
 
 const BigMovie = styled(motion.div)`
 	position: absolute;
+	z-index: 999;
+
 	width: 60vw;
 	left: 0;
 	right: 0;
 	margin: 0 auto;
 	border-radius: 15px;
 	background-color: ${(props) => props.theme.black.darker};
-	z-index: 999;
 	display: flex;
 	flex-direction: column;
 	gap: 0;
-	height: 1500px;
-	overflow: auto;
+	height: 90vh;
+	overflow-y: scroll;
 `;
 
 const BigCover = styled.div`
 	width: 100%;
 	background-size: cover;
 	background-position: top center;
-	height: 70vh;
+	height: 60vh;
+	position: relative;
+	&::after {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-image: linear-gradient(to top, #1f1f1f, 20%, transparent);
+	}
+
 	box-shadow: 0 0 30px 20px #1f1f1f;
+	img {
+		object-fit: cover;
+		object-position: center 20%;
+		width: 100%;
+		height: 100%;
+	}
 `;
 
 const BigTitle = styled.div`
@@ -75,12 +101,25 @@ const BigTitle = styled.div`
 	}
 `;
 
-const BigOverview = styled.p`
+const BigTagline = styled.div`
 	color: ${(props) => props.theme.white.lighter};
+	font-size: 1.5rem;
+	font-weight: 600;
 	line-height: 1.25;
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 10vh;
+`;
+
+const BigOverview = styled.div`
+	font-size: 1rem;
+	display: -webkit-box;
+	line-height: 1.5;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
 	overflow: hidden;
 	text-overflow: ellipsis;
 `;
@@ -91,7 +130,9 @@ const OverViewWrapper = styled.div`
 	flex-direction: column;
 	gap: 20px;
 	position: absolute;
-	top: 40%;
+	top: 65vh;
+	height: 200vh;
+	width: 100%;
 `;
 
 const OverviewContainer = styled.div`
@@ -121,8 +162,8 @@ const OverviewContainer = styled.div`
 const InfoContainer = styled.div`
 	display: flex;
 	align-items: center;
-	font-size: 24px;
-	gap: 8px;
+	font-size: 20px;
+	gap: 4px;
 	> div {
 		display: flex;
 		justify-content: center;
@@ -130,7 +171,23 @@ const InfoContainer = styled.div`
 		gap: 4px;
 		> span:first-child {
 			color: yellow;
+			font-size: 18px;
 		}
+	}
+`;
+
+const YearGenreCountryContainer = styled.div`
+	display: flex;
+	font-size: 0.9rem;
+	gap: 12px;
+	align-items: center;
+	color: ${(props) => props.theme.white.darker};
+	span:first-child {
+		display: inline-block;
+		padding: 4px 8px;
+		border: 1px solid ${(props) => props.theme.black.lighter};
+
+		border-radius: 4px;
 	}
 `;
 
@@ -201,12 +258,126 @@ const BigMovieSection = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	height: 40vh;
+	max-height: 50vh;
+
+	width: 100%;
+	position: relative;
+	:first-child {
+		height: 25vh;
+		gap: 12px;
+		div:nth-child(3) {
+			margin-top: 12px;
+		}
+	}
+	:nth-child(2) {
+		height: 25vh;
+	}
 `;
 
-const Line = styled.div`
+const BigMovieHeader = styled.div`
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+	> div:first-child {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		div:last-child {
+			margin-top: 12px;
+		}
+	}
+	p {
+		display: -webkit-box;
+		align-self: center;
+		line-height: 1.5;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 4;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+`;
+
+const Divider = styled.div`
 	width: 100%;
 	height: 1px;
+	position: absolute;
+	top: -30px;
 	background-color: ${(props) => props.theme.black.lighter};
+`;
+
+const CloseBtn = styled.span`
+	display: block;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.8);
+	color: white;
+	font-size: 24px;
+	position: absolute;
+	top: 2%;
+	right: 2%;
+	padding: 8px;
+	:hover {
+		cursor: pointer;
+	}
+`;
+
+const ReviewCardWrapper = styled.div`
+	width: 100%;
+	height: 26vh;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+`;
+
+const ReviewCard = styled.div`
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+
+	width: 100%;
+	gap: 20px;
+	background-color: ${(props) => props.theme.black.veryDark};
+	padding: 20px;
+	div:first-child {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-weight: 600;
+		justify-content: space-between;
+		img {
+			width: 35px;
+			height: 35px;
+			border-radius: 50%;
+			object-fit: cover;
+			object-position: center;
+		}
+		div:first-child {
+			justify-content: flex-start;
+			width: 80%;
+			font-size: 100%;
+		}
+		div:last-child {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 2px 12px;
+			gap: 4px;
+			border: 1px solid ${(props) => props.theme.white.darker};
+			border-radius: 20px;
+			span {
+				font-size: 14px;
+				font-weight: 400;
+			}
+		}
+	}
+	div:last-child {
+		display: -webkit-box;
+		line-height: 1.5;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 `;
 
 function MovieModal() {
@@ -219,15 +390,19 @@ function MovieModal() {
 		() => getMovieDetail(Number(clickedMovieId))
 	);
 
-	const { data: movieImageResult } = useQuery<IGetImagesResult>(
-		["movieImageRsult", clickedMovieId],
-		() => getImages(Number(clickedMovieId))
-	);
+	const { data: movieReviews, isLoading: isMovieReviewsLoading } =
+		useQuery<IGetReviews>(["movieReviewsResult", clickedMovieId], () =>
+			getReviews(Number(clickedMovieId))
+		);
 	const { data: movieCreditsResult } = useQuery<IGetCredits>(
 		["movieCreditResult", clickedMovieId],
 		() => getCredits(Number(clickedMovieId))
 	);
 	let mainCast = undefined;
+	let reviews = undefined;
+	if (movieReviews && movieReviews.results) {
+		reviews = movieReviews.results;
+	}
 	if (movieCreditsResult) {
 		mainCast = movieCreditsResult.cast.slice(0, 12);
 	}
@@ -238,7 +413,7 @@ function MovieModal() {
 	const { scrollY } = useScroll();
 	const navigate = useNavigate();
 
-	const onOverlayClick = () => {
+	const onModalClose = () => {
 		navigate("/");
 	};
 	useEffect(() => {
@@ -250,31 +425,38 @@ function MovieModal() {
 		}
 	}, [logoExists, movieImages]);
 	const movieImageLogoExist = logoExists && movieImages;
+	console.log(reviews);
+	const sectionHeights = {
+		cast: "40vh",
+		review: "40vh",
+		rec: "40vh",
+	};
 	return (
 		<>
+			<GlobalStyle />
 			<AnimatePresence>
 				{moviePathMatch ? (
 					<>
 						<Overlay
-							onClick={onOverlayClick}
+							onClick={onModalClose}
 							exit={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 						/>
 						<BigMovie
-							style={{ top: scrollY.get() + 40 }}
+							style={{ top: `${scrollY.get() + 5}vh` }}
 							layoutId={moviePathMatch?.params.movieId}
 						>
 							{clickedMovie && (
 								<>
 									<>
-										<BigCover
-											style={{
-												backgroundImage: `linear-gradient(to top, #1f1f1f, 20%, transparent), url(${makeImagePath(
+										<BigCover>
+											<img
+												src={makeImagePath(
 													clickedMovie.backdrop_path,
 													"original"
-												)})`,
-											}}
-										/>
+												)}
+											/>
+										</BigCover>
 										<BigTitle>
 											{logoExists && movieImages ? (
 												<img
@@ -289,10 +471,22 @@ function MovieModal() {
 												clickedMovie.original_title
 											)}
 										</BigTitle>
+										<CloseBtn className="material-icons" onClick={onModalClose}>
+											close
+										</CloseBtn>
 									</>
-
 									<OverViewWrapper>
-										<OverviewContainer>
+										<BigMovieSection>
+											<YearGenreCountryContainer>
+												<span>
+													{new Date(clickedMovie.release_date).getFullYear()}
+												</span>
+												<span>
+													{formatGenres(clickedMovie.genres, " / ")}
+													&nbsp;&nbsp;•&nbsp;&nbsp;
+													{formatCountry(clickedMovie.production_countries[0])}
+												</span>
+											</YearGenreCountryContainer>
 											<InfoContainer>
 												<div>
 													<span className="material-icons">star</span>
@@ -303,21 +497,17 @@ function MovieModal() {
 												<MidDot />
 												<span>{formatTime(clickedMovie.runtime || 0)}</span>
 											</InfoContainer>
-											<BigOverview>{clickedMovie.overview}</BigOverview>
-										</OverviewContainer>
-										<OverviewContainer>
-											<div>
-												<span>{"Genres:" + " "}</span>
-												<span>
-													{formatGenres(clickedMovie.genres)?.map(
-														(genre, index) =>
-															index !== 0 ? ", " + genre : genre
-													)}
-												</span>
-											</div>
-										</OverviewContainer>
-										<Line />
+											<BigTagline>{clickedMovie.tagline}</BigTagline>
+										</BigMovieSection>
 										<BigMovieSection>
+											<Divider />
+											<BigMovieSectionTitle>Overview</BigMovieSectionTitle>
+											<BigOverview>{clickedMovie.overview}</BigOverview>
+										</BigMovieSection>
+
+										<BigMovieSection>
+											<Divider />
+
 											<BigMovieSectionTitle>Cast/Crew</BigMovieSectionTitle>
 
 											{mainCast && (
@@ -330,6 +520,58 @@ function MovieModal() {
 													}
 												/>
 											)}
+										</BigMovieSection>
+
+										<BigMovieSection>
+											<Divider />
+
+											<BigMovieSectionTitle>
+												Reviews ({reviews && reviews.length})
+											</BigMovieSectionTitle>
+											<ReviewCardWrapper>
+												{reviews &&
+													reviews.slice(0, 2).map((review, index) => (
+														<ReviewCard key={index}>
+															<div>
+																<div>
+																	<img
+																		src={makeAvatarPath(
+																			review.author_details.avatar_path
+																		)}
+																	/>
+																	<span>{review.author}</span>
+																</div>
+
+																<div>
+																	{review.author_details.rating && (
+																		<>
+																			<span className="material-icons">
+																				star
+																			</span>
+																			<span>
+																				{formatRating(
+																					review.author_details.rating
+																				)}
+																			</span>
+																		</>
+																	)}
+																</div>
+															</div>
+															<div
+																style={{}}
+																dangerouslySetInnerHTML={{
+																	__html: review.content,
+																}}
+															/>
+														</ReviewCard>
+													))}
+											</ReviewCardWrapper>
+										</BigMovieSection>
+										<BigMovieSection>
+											<Divider />
+											<BigMovieSectionTitle>
+												Recommendations
+											</BigMovieSectionTitle>
 										</BigMovieSection>
 									</OverViewWrapper>
 								</>
