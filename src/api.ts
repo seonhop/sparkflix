@@ -7,6 +7,12 @@ export function getMovies() {
 	).then((response) => response.json());
 }
 
+export function getPopular() {
+	return fetch(
+		`${BASE_PATH}/movie/popular?api_key=${API_KEY}&language=en-US`
+	).then((response) => response.json());
+}
+
 export function getVideos(movie_id: number) {
 	return fetch(
 		`${BASE_PATH}/movie/${movie_id}/videos?api_key=${API_KEY}&language=en-US`
@@ -16,6 +22,12 @@ export function getVideos(movie_id: number) {
 export function getImages(movie_id: number) {
 	return fetch(
 		`${BASE_PATH}/movie/${movie_id}/images?api_key=${API_KEY}&language=en&include_image_language=en,null`
+	).then((response) => response.json());
+}
+
+export function getCredits(movie_id: number) {
+	return fetch(
+		`${BASE_PATH}/movie/${movie_id}/credits?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 

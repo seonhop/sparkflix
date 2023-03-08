@@ -22,6 +22,7 @@ const router = createBrowserRouter(
 						},
 					],
 				},
+
 				{
 					path: "/tv",
 					element: <Tv />,

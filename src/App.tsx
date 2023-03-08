@@ -60,7 +60,8 @@ const GlobalStyle = createGlobalStyle`
 	body {
 		font-family: 'Open Sans', sans-serif;
 		background-color: ${(props) => props.theme.black.darker};
-		color: ${(props) => props.theme.white.darker};
+		color: ${(props) => props.theme.white.lighter};
+		
 
 	}
 	a {

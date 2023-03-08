@@ -17,7 +17,7 @@ const Nav = styled(motion.nav)`
 	width: 100%;
 	height: 5rem;
 	font-size: 0.9rem;
-	color: ${(props) => props.theme.white.darker};
+	color: ${(props) => props.theme.white.lighter};
 	padding: 0 3.5rem;
 	z-index: 99;
 `;

@@ -1,9 +1,9 @@
 import styled from "styled-components";
 import { useQuery } from "react-query";
-import { getMovies, getMovieDetail, getImages } from "../api";
+import { getMovies, getMovieDetail, getImages, getPopular } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
-import { makeImagePath } from "../utils";
+import { makeImagePath, SLIDER_MARGIN } from "../utils";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
@@ -16,15 +16,15 @@ import {
 	useOutletContext,
 } from "react-router-dom";
 import { OFF_SET, SPIDERMAN_ID } from "../utils";
-import { HeroSlider } from "../Components/Slider";
+import { HeroSlider, Slider } from "../Components/Slider";
 import { dir } from "console";
+import { IGetPopularResult } from "../Interfaces/API/IGetPopular";
 
 const Container = styled.div`
 	display: flex;
 	flex-direction: column;
 	width: 100%;
 	height: 200vh;
-	overflow-x: hidden;
 `;
 
 const Span = styled.span`
@@ -53,6 +53,7 @@ const Hero = styled.div<{ bgPhoto: string }>`
 		linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.4)),
 		url(${(props) => props.bgPhoto});
 	background-size: cover;
+	box-shadow: 0 0 40px 20px black;
 `;
 
 const HeroTitleContainer = styled.div`
@@ -69,7 +70,8 @@ const HeroInfoContainer = styled.div`
 `;
 
 const HeroOverview = styled.p`
-	font-size: 1.1rem;
+	font-size: 1.5rem;
+	font-weight: 600;
 	width: 35%;
 	line-height: 1.25;
 	display: -webkit-box;
@@ -79,197 +81,42 @@ const HeroOverview = styled.p`
 	text-overflow: ellipsis;
 `;
 
-const Slider = styled.div<{ margin: number }>`
-	position: relative;
-	top: ${(props) => props.margin}px;
-`;
-
-type ISliderBtnPos = "left" | "right";
-
-const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
-	opacity: 0;
-	background-color: rgba(0, 0, 0, 0.5);
-	position: absolute;
-	width: 3.5rem;
-	height: 120px;
-	display: flex;
-	left: ${(props) => (props.pos === "left" ? 0 : "none")};
-	right: ${(props) => (props.pos === "right" ? 0 : "none")};
-	justify-content: center;
-	align-items: center;
-	font-size: 48px;
-	:hover {
-		cursor: pointer;
-	}
-`;
-
-const sliderBtnVariants = {
-	hidden: {
-		opacity: 0,
-	},
-	hover: {
-		opacity: 1,
-		transition: {
-			duaration: 0,
-			type: "tween",
-		},
-	},
-};
-
-const SliderBtnIcon = styled(motion.span)``;
-
-const Row = styled(motion.div)`
-	display: grid;
-	gap: 0.5rem;
-	grid-template-columns: repeat(6, 1fr);
-	position: absolute;
-	width: 100%;
-	padding: 0 3.5rem;
-`;
-
-const rowVariants = {
-	hidden: (dirRight: boolean) => ({
-		x: dirRight
-			? `calc(${window.outerWidth}px + 0.5rem)`
-			: `calc(-${window.outerWidth}px - 0.5rem)`,
-	}),
-	visible: {
-		x: 0,
-	},
-	exit: (dirRight: boolean) => ({
-		x: dirRight
-			? `calc(-${window.outerWidth}px - 0.5rem)`
-			: `calc(${window.outerWidth}px + 0.5rem)`,
-	}),
-	hover: {
-		transition: {
-			duration: 0,
-		},
-	},
-};
-
-const newRowVariants = {
-	hidden: {
-		x: `calc(${window.outerWidth}px + 0.5rem)`,
-	},
-	visible: {
-		x: 0,
-	},
-	exit: {
-		x: `calc(-${window.outerWidth}px - 0.5rem)`,
-	},
-	hover: {
-		transition: {
-			duration: 0,
-		},
-	},
-};
-
-const Box = styled(motion.div)`
-	display: flex;
-	flex-direction: column;
-	gap: 0;
-	:first-child {
-		transform-origin: center left;
-	}
-	:last-child {
-		transform-origin: center right;
-	}
-	:hover {
-		cursor: pointer;
-	}
-`;
-
-const boxVariants = {
-	normal: {
-		scale: 1,
-		transitionEnd: { zIndex: 1 },
-		zIndex: 1,
-	},
-	hover: {
-		zIndex: 2,
-		scale: 1.3,
-		y: -80,
-		transition: {
-			delay: 1.2,
-			duration: 0.1,
-			type: "tween",
-		},
-	},
-};
-
-const BoxImgContainer = styled(motion.div)<{
-	bgphoto?: string;
-	pos: (string | number)[];
-	transform: (string | number)[];
-	logowidth: string;
-}>`
-	position: relative;
-	background-size: cover;
-	background-position: center center;
-	height: 120px;
-
-	> img:first-child {
-		max-height: 100%;
-	}
-	> img:last-child {
-		position: absolute;
-		top: ${(props) => props.pos[0]}l;
-		right: ${(props) => props.pos[1]};
-		bottom: ${(props) => props.pos[2]};
-		left: ${(props) => props.pos[3]};
-		width: ${(props) => props.logowidth};
-		transform: translate(
-			${(props) => props.transform[0]},
-			${(props) => props.transform[1]}
-		);
-	}
-`;
-
-const Info = styled(motion.div)`
-	padding: 10px;
-	background-color: ${(props) => props.theme.black.lighter};
-	opacity: 0;
-	width: 100%;
-	h4 {
-		text-align: center;
-		font-size: 18px;
-	}
-`;
-
-const infoVariants = {
-	hover: {
-		opacity: 1,
-		transition: {
-			delay: 0.5,
-			duaration: 0.1,
-			type: "tween",
-		},
-	},
-};
-
 function Home() {
 	const navigate = useNavigate();
-	const { data: heroImage, isLoading } = useQuery<IGetImagesResult>(
-		["images", "highestRatingMovie"],
-		() => getImages(SPIDERMAN_ID)
+	const { data: heroImage, isLoading: heroImageLoading } =
+		useQuery<IGetImagesResult>(["heroImage", SPIDERMAN_ID], () =>
+			getImages(SPIDERMAN_ID)
+		);
+	const { data: heroData } = useQuery<IGetMovieDetailResult>(
+		["heroData", SPIDERMAN_ID],
+		() => getMovieDetail(SPIDERMAN_ID)
 	);
-
-	//const margin = -window.innerHeight * 0.15;
-	const { data: favMovieImages } = useQuery<IGetImagesResult[]>(
-		["favMovieImages", favMovieIDs],
-		async () => {
-			const promises = favMovieIDs.map((favmovie) => getImages(favmovie.id));
-			return Promise.all(promises);
-		}
-	);
-
+	const { data: favMovieImages, isLoading: favImageLoading } = useQuery<
+		IGetImagesResult[]
+	>(["favMovieImages", favMovieIDs], async () => {
+		const promises = favMovieIDs.map((favmovie) => getImages(favmovie.id));
+		return Promise.all(promises);
+	});
+	const { data: favMovieDetails, isLoading: favDetailLoading } = useQuery<
+		IGetMovieDetailResult[]
+	>(["favMovieDetails", favMovieIDs], async () => {
+		const promises = favMovieIDs.map((favmovie) => getMovieDetail(favmovie.id));
+		return Promise.all(promises);
+	});
+	const isHeroLoading = heroImageLoading || favImageLoading || favDetailLoading;
+	const { data: popularMovies, isLoading: popularMoviesLoading } =
+		useQuery<IGetPopularResult>(["popular", "popularMovies"], () =>
+			getPopular()
+		);
+	console.log(popularMovies);
+	const movieImages = favMovieImages ? [...favMovieImages] : [];
 	return (
 		<Container>
-			{isLoading ? (
+			{isHeroLoading ? (
 				<Loader />
 			) : (
-				favMovieImages && (
+				favMovieImages &&
+				favMovieDetails && (
 					<>
 						<Hero
 							bgPhoto={makeImagePath(heroImage?.backdrops[0].file_path || "")}
@@ -280,7 +127,12 @@ function Home() {
 								/>
 							</HeroTitleContainer>
 						</Hero>
-						<HeroSlider heroMovieImages={favMovieImages} />
+						<Slider
+							imageData={favMovieImages}
+							detailData={favMovieDetails}
+							wrapperMargin={SLIDER_MARGIN}
+						/>
+						<Outlet context={{ movieImages: movieImages }} />
 					</>
 				)
 			)}
