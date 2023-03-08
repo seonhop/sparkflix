@@ -11,6 +11,7 @@ import {
 	formatRating,
 	formatGenres,
 	NETFLIX_LOGO_URL,
+	makeAvatarPath,
 } from "../utils";
 import { useNavigate } from "react-router-dom";
 import { favMovieDict } from "../favMovies";
@@ -27,6 +28,7 @@ import { IGetVideosResult } from "../Interfaces/API/IGetVideos";
 import { getVideos } from "../api";
 import { MidDot } from "./MidDot";
 import { Genres } from "./Genres";
+import { ReviewResults } from "../Interfaces/API/IGetReviews";
 
 const SliderWrapper = styled.div<{ margin?: number }>`
 	position: relative;
@@ -39,6 +41,7 @@ const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
 	opacity: 0;
 	background-color: rgba(0, 0, 0, 0.5);
 	position: absolute;
+	top: 15%;
 	width: 3.5rem;
 	height: 120px;
 	display: flex;
@@ -251,6 +254,10 @@ const Pagination = styled(motion.div)<IPaginationProps>`
 	}
 `;
 
+const BigMoviePagination = styled(Pagination)`
+	margin-right: 0;
+`;
+
 const paginationVariants = {
 	hidden: {
 		opacity: 0,
@@ -342,16 +349,218 @@ const castSliderContainerVariants = {
 
 const MotionDiv = styled(motion.div)``;
 
-export function CastSlider({ cast, movieId }: CastSliderProps) {
+interface IReviewSliderProps {
+	reviews: ReviewResults[];
+	movieId: string;
+}
+
+const ReviewCardWrapper = styled(motion.div)`
+	position: absolute;
+	width: 100%;
+	height: 26vh;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+`;
+
+const ReviewCard = styled(motion.div)`
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	gap: 20px;
+	background-color: ${(props) => props.theme.black.veryDark};
+	padding: 20px;
+	div:first-child {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-weight: 600;
+		justify-content: space-between;
+		img {
+			width: 35px;
+			height: 35px;
+			border-radius: 50%;
+			object-fit: cover;
+			object-position: center;
+		}
+		div:first-child {
+			justify-content: flex-start;
+			width: 80%;
+			font-size: 100%;
+		}
+		div:last-child {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 2px 12px;
+			gap: 4px;
+			border: 1px solid ${(props) => props.theme.white.darker};
+			border-radius: 20px;
+			span {
+				font-size: 14px;
+				font-weight: 400;
+			}
+		}
+	}
+	div:last-child {
+		display: -webkit-box;
+		line-height: 1.5;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+`;
+
+export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
+	const [arePages, setArePages] = useState(true);
 	const [dirRight, setDirRight] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [leaving, setLeaving] = useState(false);
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
+	const totalCast = reviews.length;
+	const offset = 2;
+	const maxIndex = Math.ceil(totalCast / offset) - 1;
+	useEffect(() => {
+		if (maxIndex === 0) {
+			setArePages(false);
+		}
+	}, [arePages]);
+
+	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
+		if (reviews) {
+			if (leaving) return;
+			toggleLeaving();
+
+			if (sliderBtnPos === "left") {
+				setIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
+				setDirRight(false);
+			} else {
+				setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
+				setDirRight(true);
+			}
+		}
+	};
+	console.log(reviews);
+	console.log(reviews.slice(offset * index, offset * index + offset));
+
+	return (
+		<>
+			<SliderWrapper>
+				<AnimatePresence
+					initial={false}
+					onExitComplete={toggleLeaving}
+					custom={dirRight}
+				>
+					<ReviewCardWrapper
+						variants={castSliderContainerVariants}
+						initial="hidden"
+						animate="visible"
+						whileHover="hover"
+						exit="exit"
+						key={"review" + movieId + index}
+						transition={{ type: "tween", duration: 1 }}
+						custom={dirRight}
+					>
+						{reviews &&
+							reviews
+								.slice(offset * index, offset * index + offset)
+								.map((review, index) => (
+									<ReviewCard key={index}>
+										<div>
+											<div>
+												<img
+													src={makeAvatarPath(
+														review.author_details.avatar_path
+													)}
+												/>
+												<span>{review.author}</span>
+											</div>
+											<div>
+												{review.author_details.rating ? (
+													<>
+														<span className="material-icons">star</span>
+														<span>
+															{formatRating(review.author_details.rating)}
+														</span>
+													</>
+												) : (
+													<span>N/A</span>
+												)}
+											</div>
+										</div>
+										<div
+											style={{}}
+											dangerouslySetInnerHTML={{
+												__html: review.content,
+											}}
+										/>
+									</ReviewCard>
+								))}
+						{arePages && (
+							<>
+								{" "}
+								<SliderBtn
+									variants={sliderBtnVariants}
+									transition={{ type: "tween" }}
+									pos="left"
+									onClick={() => manipulateIndex("left", maxIndex)}
+								>
+									<SliderBtnIcon className="material-icons">
+										arrow_back_ios
+									</SliderBtnIcon>
+								</SliderBtn>
+								<SliderBtn
+									variants={sliderBtnVariants}
+									transition={{ type: "tween" }}
+									pos="right"
+									onClick={() => manipulateIndex("right", maxIndex)}
+								>
+									<SliderBtnIcon className="material-icons">
+										arrow_forward_ios
+									</SliderBtnIcon>
+								</SliderBtn>
+								<BigMoviePagination
+									maxindex={maxIndex}
+									currindex={index}
+									margin={SLIDER_MARGIN}
+									variants={paginationVariants}
+								>
+									{Array(maxIndex + 1)
+										.fill(null)
+										.map((_, index) => (
+											<div key={index}></div>
+										))}
+								</BigMoviePagination>
+							</>
+						)}
+					</ReviewCardWrapper>
+				</AnimatePresence>
+			</SliderWrapper>
+		</>
+	);
+}
+
+export function CastSlider({ cast, movieId }: CastSliderProps) {
+	const [dirRight, setDirRight] = useState(true);
+	const [index, setIndex] = useState(0);
+	const [leaving, setLeaving] = useState(false);
+	const [arePages, setArePages] = useState(true);
+
+	const toggleLeaving = () => {
+		setLeaving((prev) => !prev);
+	};
 	const totalCast = cast.length;
 	const offset = 4;
 	const maxIndex = Math.floor(totalCast / offset) - 1;
+	useEffect(() => {
+		if (maxIndex === 0) {
+			setArePages(false);
+		}
+	}, [arePages]);
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
 		if (cast) {
 			if (leaving) return;
@@ -410,38 +619,42 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 									</React.Fragment>
 								</CastCard>
 							))}
-						<SliderBtn
-							variants={sliderBtnVariants}
-							transition={{ type: "tween" }}
-							pos="left"
-							onClick={() => manipulateIndex("left", maxIndex)}
-						>
-							<SliderBtnIcon className="material-icons">
-								arrow_back_ios
-							</SliderBtnIcon>
-						</SliderBtn>
-						<SliderBtn
-							variants={sliderBtnVariants}
-							transition={{ type: "tween" }}
-							pos="right"
-							onClick={() => manipulateIndex("right", maxIndex)}
-						>
-							<SliderBtnIcon className="material-icons">
-								arrow_forward_ios
-							</SliderBtnIcon>
-						</SliderBtn>
-						<Pagination
-							maxindex={maxIndex}
-							currindex={index}
-							margin={SLIDER_MARGIN}
-							variants={paginationVariants}
-						>
-							{Array(maxIndex + 1)
-								.fill(null)
-								.map((_, index) => (
-									<div key={index}></div>
-								))}
-						</Pagination>
+						{arePages && (
+							<>
+								<SliderBtn
+									variants={sliderBtnVariants}
+									transition={{ type: "tween" }}
+									pos="left"
+									onClick={() => manipulateIndex("left", maxIndex)}
+								>
+									<SliderBtnIcon className="material-icons">
+										arrow_back_ios
+									</SliderBtnIcon>
+								</SliderBtn>
+								<SliderBtn
+									variants={sliderBtnVariants}
+									transition={{ type: "tween" }}
+									pos="right"
+									onClick={() => manipulateIndex("right", maxIndex)}
+								>
+									<SliderBtnIcon className="material-icons">
+										arrow_forward_ios
+									</SliderBtnIcon>
+								</SliderBtn>
+								<BigMoviePagination
+									maxindex={maxIndex}
+									currindex={index}
+									margin={SLIDER_MARGIN}
+									variants={paginationVariants}
+								>
+									{Array(maxIndex + 1)
+										.fill(null)
+										.map((_, index) => (
+											<div key={index}></div>
+										))}
+								</BigMoviePagination>
+							</>
+						)}
 					</CastCardContainer>
 				</AnimatePresence>
 			</SliderWrapper>

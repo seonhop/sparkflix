@@ -1,12 +1,12 @@
 export interface IGetReviews {
 	id: number;
 	page: number;
-	results: Result[];
+	results: ReviewResults[];
 	total_pages: number;
 	total_results: number;
 }
 
-interface Result {
+export interface ReviewResults {
 	author: string;
 	author_details: AuthorDetails;
 	content: string;

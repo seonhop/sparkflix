@@ -100,7 +100,11 @@ const Circle = styled(motion.span)`
 	bottom: -12px;
 `;
 
-const SearchIcon = styled(motion.span)``;
+const SearchIcon = styled(motion.span)`
+	:hover {
+		cursor: pointer;
+	}
+`;
 
 const SearchBar = styled(motion.form)`
 	display: flex;
@@ -133,6 +137,12 @@ interface IForm {
 	keyword: string;
 }
 
+const SearchCloseBtn = styled.span`
+	:hover {
+		cursor: pointer;
+	}
+`;
+
 function NavBar() {
 	const homeMatch = useMatch("/");
 	const navigate = useNavigate();
@@ -163,6 +173,12 @@ function NavBar() {
 	const { register, handleSubmit } = useForm<IForm>();
 	const onValid = (data: IForm) => {
 		navigate(`/search?keyword=${data.keyword}`);
+	};
+	const onClickClose = () => {
+		setSearchOpen(false);
+		if (!homeMatch) {
+			navigate("/");
+		}
 	};
 
 	return (
@@ -219,6 +235,11 @@ function NavBar() {
 							transition={{ delay: 1 }}
 							placeholder="Title, Genre, Actor..."
 						/>
+						{searchOpen && (
+							<SearchCloseBtn className="material-icons" onClick={onClickClose}>
+								close
+							</SearchCloseBtn>
+						)}
 					</SearchBar>
 				) : null}
 			</NavCol>

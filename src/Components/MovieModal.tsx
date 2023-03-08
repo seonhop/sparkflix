@@ -27,7 +27,7 @@ import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
 import { Cast, IGetCredits } from "../Interfaces/API/IGetCredits";
 import React from "react";
-import { CastSlider } from "./Slider";
+import { CastSlider, ReviewSlider } from "./Slider";
 import { click } from "@testing-library/user-event/dist/click";
 import { IGetReviews } from "../Interfaces/API/IGetReviews";
 
@@ -46,7 +46,8 @@ const Overlay = styled(motion.div)`
 `;
 
 const BigMovie = styled(motion.div)`
-	position: absolute;
+	position: fixed;
+	top: 5vh;
 	z-index: 999;
 
 	width: 60vw;
@@ -103,7 +104,7 @@ const BigTitle = styled.div`
 
 const BigTagline = styled.div`
 	color: ${(props) => props.theme.white.lighter};
-	font-size: 1.5rem;
+	font-size: 120%;
 	font-weight: 600;
 	line-height: 1.25;
 	display: -webkit-box;
@@ -116,11 +117,9 @@ const BigTagline = styled.div`
 
 const BigOverview = styled.div`
 	font-size: 1rem;
-	display: -webkit-box;
 	line-height: 1.5;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 3;
-	overflow: hidden;
+	max-height: calc(1.5rem * 6);
+	overflow: auto;
 	text-overflow: ellipsis;
 `;
 
@@ -270,15 +269,13 @@ const BigMovieSection = styled.div`
 			margin-top: 12px;
 		}
 	}
-	:nth-child(2) {
-		height: 25vh;
-	}
 `;
 
 const BigMovieHeader = styled.div`
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1.5fr 1fr;
 	grid-gap: 20px;
+	height: 27vh;
 	> div:first-child {
 		display: flex;
 		flex-direction: column;
@@ -286,15 +283,6 @@ const BigMovieHeader = styled.div`
 		div:last-child {
 			margin-top: 12px;
 		}
-	}
-	p {
-		display: -webkit-box;
-		align-self: center;
-		line-height: 1.5;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 4;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 `;
 
@@ -442,10 +430,7 @@ function MovieModal() {
 							exit={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 						/>
-						<BigMovie
-							style={{ top: `${scrollY.get() + 5}vh` }}
-							layoutId={moviePathMatch?.params.movieId}
-						>
+						<BigMovie layoutId={moviePathMatch?.params.movieId}>
 							{clickedMovie && (
 								<>
 									<>
@@ -476,34 +461,34 @@ function MovieModal() {
 										</CloseBtn>
 									</>
 									<OverViewWrapper>
-										<BigMovieSection>
-											<YearGenreCountryContainer>
-												<span>
-													{new Date(clickedMovie.release_date).getFullYear()}
-												</span>
-												<span>
-													{formatGenres(clickedMovie.genres, " / ")}
-													&nbsp;&nbsp;•&nbsp;&nbsp;
-													{formatCountry(clickedMovie.production_countries[0])}
-												</span>
-											</YearGenreCountryContainer>
-											<InfoContainer>
-												<div>
-													<span className="material-icons">star</span>
+										<BigMovieHeader>
+											<div>
+												<YearGenreCountryContainer>
 													<span>
-														{formatRating(clickedMovie?.vote_average)}
+														{new Date(clickedMovie.release_date).getFullYear()}
 													</span>
-												</div>
-												<MidDot />
-												<span>{formatTime(clickedMovie.runtime || 0)}</span>
-											</InfoContainer>
-											<BigTagline>{clickedMovie.tagline}</BigTagline>
-										</BigMovieSection>
-										<BigMovieSection>
-											<Divider />
-											<BigMovieSectionTitle>Overview</BigMovieSectionTitle>
+													<span>
+														{formatGenres(clickedMovie.genres, " / ")}
+														&nbsp;&nbsp;•&nbsp;&nbsp;
+														{formatCountry(
+															clickedMovie.production_countries[0]
+														)}
+													</span>
+												</YearGenreCountryContainer>
+												<InfoContainer>
+													<div>
+														<span className="material-icons">star</span>
+														<span>
+															{formatRating(clickedMovie?.vote_average)}
+														</span>
+													</div>
+													<MidDot />
+													<span>{formatTime(clickedMovie.runtime || 0)}</span>
+												</InfoContainer>
+												<BigTagline>{clickedMovie.tagline}</BigTagline>
+											</div>
 											<BigOverview>{clickedMovie.overview}</BigOverview>
-										</BigMovieSection>
+										</BigMovieHeader>
 
 										<BigMovieSection>
 											<Divider />
@@ -528,44 +513,16 @@ function MovieModal() {
 											<BigMovieSectionTitle>
 												Reviews ({reviews && reviews.length})
 											</BigMovieSectionTitle>
-											<ReviewCardWrapper>
-												{reviews &&
-													reviews.slice(0, 2).map((review, index) => (
-														<ReviewCard key={index}>
-															<div>
-																<div>
-																	<img
-																		src={makeAvatarPath(
-																			review.author_details.avatar_path
-																		)}
-																	/>
-																	<span>{review.author}</span>
-																</div>
-
-																<div>
-																	{review.author_details.rating && (
-																		<>
-																			<span className="material-icons">
-																				star
-																			</span>
-																			<span>
-																				{formatRating(
-																					review.author_details.rating
-																				)}
-																			</span>
-																		</>
-																	)}
-																</div>
-															</div>
-															<div
-																style={{}}
-																dangerouslySetInnerHTML={{
-																	__html: review.content,
-																}}
-															/>
-														</ReviewCard>
-													))}
-											</ReviewCardWrapper>
+											{reviews && (
+												<ReviewSlider
+													reviews={reviews}
+													movieId={
+														clickedMovieId
+															? clickedMovieId
+															: new Date().getTime().toString()
+													}
+												/>
+											)}
 										</BigMovieSection>
 										<BigMovieSection>
 											<Divider />
