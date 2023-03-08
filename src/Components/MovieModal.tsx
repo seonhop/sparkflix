@@ -21,7 +21,13 @@ import {
 } from "../utils";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { useQuery } from "react-query";
-import { getCredits, getImages, getMovieDetail, getReviews } from "../api";
+import {
+	getCredits,
+	getImages,
+	getMovieDetail,
+	getRecommends,
+	getReviews,
+} from "../api";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
 import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
@@ -30,6 +36,7 @@ import React from "react";
 import { CastSlider, ReviewSlider } from "./Slider";
 import { click } from "@testing-library/user-event/dist/click";
 import { IGetReviews } from "../Interfaces/API/IGetReviews";
+import { IGetRecommendsResults } from "../Interfaces/API/IGetRecommends";
 
 const GlobalStyle = createGlobalStyle`
   html{overflow: hidden;}
@@ -130,7 +137,7 @@ const OverViewWrapper = styled.div`
 	gap: 20px;
 	position: absolute;
 	top: 65vh;
-	height: 200vh;
+	min-height: 220vh;
 	width: 100%;
 `;
 
@@ -274,6 +281,13 @@ const BigMovieSection = styled.div`
 const BigMovieHeader = styled.div`
 	display: grid;
 	grid-template-columns: 1.5fr 1fr;
+	@media screen and (max-width: 768px) {
+		grid-template-columns: 1.2fr 1fr; /* for tablet screens */
+	}
+
+	@media screen and (max-width: 480px) {
+		grid-template-columns: 1fr; /* for mobile screens */
+	}
 	grid-gap: 20px;
 	height: 27vh;
 	> div:first-child {
@@ -368,7 +382,95 @@ const ReviewCard = styled.div`
 	}
 `;
 
+const RecommendationWrapper = styled.div`
+	display: grid;
+	width: 100%;
+	grid-template-columns: repeat(4, 1fr);
+	grid-gap: 20px;
+	@media screen and (max-width: 1080px) {
+		grid-template-columns: repeat(3, 1fr); /* for tablet screens */
+	}
+
+	@media screen and (max-width: 800px) {
+		grid-template-columns: repeat(2, 1fr); /* for tablet screens */
+	}
+
+	@media screen and (max-width: 100px) {
+		grid-template-columns: 1fr; /* for mobile screens */
+	}
+`;
+
+const Recommendation = styled(motion.div)`
+	display: flex;
+	flex-direction: column;
+	color: ${(props) => props.theme.white.darker};
+	font-size: 0.5 rem;
+	gap: 4px;
+	width: 100%;
+	:hover {
+		cursor: pointer;
+	}
+
+	> div:first-child {
+		width: 100%;
+		height: 30vh;
+		overflow: hidden;
+		border-radius: 8px;
+
+		img {
+			border-radius: inherit;
+			width: 100%;
+			height: 100%;
+			object-fit: center;
+			object-position: center;
+		}
+	}
+	> div:last-child {
+	}
+`;
+
+const recommendVariants = {
+	hover: {
+		zIndex: 2,
+		scale: 1.02,
+		y: -2,
+		transition: {
+			delay: 0.5,
+			duration: 0.1,
+			type: "tween",
+		},
+	},
+};
+
+const RecommendTitleBlock = styled.div`
+	max-width: 12vw;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	h1 {
+		width: 100%;
+		color: ${(props) => props.theme.white.lighter};
+		font-weight: 700px;
+		font-size: 1.1rem;
+		padding: 8px 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+`;
+
+const RecommendationRating = styled.div`
+	display: flex;
+	gap: 2px;
+	align-items: center;
+	span:first-child {
+		font-size: 20px;
+	}
+`;
+
 function MovieModal() {
+	const navigate = useNavigate();
+	const onRecommendClick = (movieId: string) => navigate(`/movies/${movieId}`);
 	const { movieImages } = useOutletContext<IMovideModal>();
 	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
 	console.log(moviePathMatch);
@@ -377,6 +479,11 @@ function MovieModal() {
 		["movieDetailResult", clickedMovieId],
 		() => getMovieDetail(Number(clickedMovieId))
 	);
+	const { data: movieReocmmends, isLoading: isMovieRecommendsLoading } =
+		useQuery<IGetRecommendsResults>(
+			["movieRecommendsResult", clickedMovieId],
+			() => getRecommends(Number(clickedMovieId))
+		);
 
 	const { data: movieReviews, isLoading: isMovieReviewsLoading } =
 		useQuery<IGetReviews>(["movieReviewsResult", clickedMovieId], () =>
@@ -399,7 +506,6 @@ function MovieModal() {
 
 	const clickedMovie = moviePathMatch?.params.movieId && movieDetailResult;
 	const { scrollY } = useScroll();
-	const navigate = useNavigate();
 
 	const onModalClose = () => {
 		navigate("/");
@@ -479,7 +585,9 @@ function MovieModal() {
 													<div>
 														<span className="material-icons">star</span>
 														<span>
-															{formatRating(clickedMovie?.vote_average)}
+															{formatRating(clickedMovie?.vote_average) +
+																" " +
+																`(${clickedMovie?.vote_count.toLocaleString()})`}
 														</span>
 													</div>
 													<MidDot />
@@ -529,6 +637,45 @@ function MovieModal() {
 											<BigMovieSectionTitle>
 												Recommendations
 											</BigMovieSectionTitle>
+											<RecommendationWrapper>
+												{movieReocmmends &&
+													movieReocmmends.results
+														.slice(0, 6)
+														.map((recommend, index) => (
+															<Recommendation
+																key={index}
+																variants={recommendVariants}
+																whileHover="hover"
+																onClick={() =>
+																	onRecommendClick(recommend.id + "")
+																}
+															>
+																<div>
+																	<img
+																		src={makeImagePath(recommend.poster_path)}
+																	/>
+																</div>
+																<RecommendTitleBlock>
+																	<h1>{recommend.title}</h1>
+																</RecommendTitleBlock>
+																<RecommendationRating>
+																	<span className="material-icons-round">
+																		star
+																	</span>
+																	<span>
+																		{formatRating(recommend.vote_average) +
+																			" " +
+																			`(${recommend.vote_count.toLocaleString()})`}
+																	</span>
+																</RecommendationRating>
+																<span>
+																	{recommend.media_type
+																		? recommend.media_type
+																		: null}
+																</span>
+															</Recommendation>
+														))}
+											</RecommendationWrapper>
 										</BigMovieSection>
 									</OverViewWrapper>
 								</>
@@ -542,3 +689,10 @@ function MovieModal() {
 }
 
 export default MovieModal;
+
+/*
+
+
+
+
+*/

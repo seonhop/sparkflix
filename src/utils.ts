@@ -1,9 +1,15 @@
 import { ProductionCountry } from "./Interfaces/API/IGetMovieDetail";
 
-export function makeImagePath(imageId: string, format?: string) {
-	return `https://image.tmdb.org/t/p/${
-		format ? format : "original"
-	}/${imageId}`;
+export function makeImagePath(
+	imageId: string | undefined | null,
+	format?: string
+) {
+	if (imageId) {
+		return `https://image.tmdb.org/t/p/${
+			format ? format : "original"
+		}/${imageId}`;
+	}
+	return NETFLIX_LOGO_URL;
 }
 
 export function makeAvatarPath(path: string | null) {

@@ -762,7 +762,11 @@ export function Slider({ imageData, detailData, wrapperMargin }: ISlider) {
 										<div>
 											<div>
 												<span className="material-icons">star</span>
-												<span>{formatRating(movie?.vote_average)}</span>
+												<span>
+													{formatRating(movie?.vote_average) +
+														" " +
+														`(${movie?.vote_count.toLocaleString()})`}
+												</span>
 											</div>
 											<MidDot />
 											<span>{formatTime(movie.runtime || 0)}</span>

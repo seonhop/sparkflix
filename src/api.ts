@@ -13,6 +13,12 @@ export function getPopular() {
 	).then((response) => response.json());
 }
 
+export function getRecommends(movie_id: number) {
+	return fetch(
+		`${BASE_PATH}/movie/${movie_id}/recommendations?api_key=${API_KEY}&language=en-US`
+	).then((response) => response.json());
+}
+
 export function getVideos(movie_id: number) {
 	return fetch(
 		`${BASE_PATH}/movie/${movie_id}/videos?api_key=${API_KEY}&language=en-US`
