@@ -1,6 +1,3 @@
-import React from "react";
-import logo from "./logo.svg";
-import "./App.css";
 import { createGlobalStyle } from "styled-components";
 import NavBar from "./Components/NavBar";
 import { Outlet } from "react-router-dom";

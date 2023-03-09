@@ -4,7 +4,7 @@ import { useQuery } from "react-query";
 import styled from "styled-components";
 import { IGetSearchResults } from "../Interfaces/API/IGetSearchResults";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
-import { makeImagePath } from "../utils";
+import { makeImagePath } from "../utils/makePath";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 
 const SearchContainer = styled.div`

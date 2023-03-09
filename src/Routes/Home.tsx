@@ -9,7 +9,7 @@ import {
 } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
-import { makeImagePath, SLIDER_MARGIN } from "../utils";
+import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
@@ -21,7 +21,7 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { OFF_SET, SPIDERMAN_ID } from "../utils";
+import { OFF_SET, SPIDERMAN_ID, SLIDER_MARGIN } from "../utils/consts";
 import { HeroSlider, Slider } from "../Components/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
@@ -31,7 +31,7 @@ const Container = styled.div`
 	flex-direction: column;
 	position: relative;
 	width: 100%;
-	min-height: 250vh;
+	min-height: 200vh;
 `;
 
 const Span = styled.span`
@@ -74,33 +74,17 @@ const HeroTitle = styled.img`
 	max-height: 100%;
 `;
 
-const HeroInfoContainer = styled.div`
-	display: flex;
-`;
-
-const HeroOverview = styled.p`
-	font-size: 1.5rem;
-	font-weight: 600;
-	width: 35%;
-	line-height: 1.25;
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 4;
-	overflow: hidden;
-	text-overflow: ellipsis;
-`;
-
 const Section = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
 	h1 {
-		font-size: 2rem;
-		font-weight: 700;
+		font-size: 1.4rem;
+		font-weight: 500;
 		padding: 0 3.5rem;
 		z-index: 2;
 	}
-	margin-top: 30vh;
+	margin-top: 25vh;
 `;
 
 function Home() {

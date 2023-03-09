@@ -1,6 +1,69 @@
 const API_KEY = "3a80f7f28c20df567800b2cbc5e55a54";
 const BASE_PATH = "https://api.themoviedb.org/3";
 
+export function fetchData(
+	endpoint: string,
+	mediaType: "movie" | "tv",
+	movieId?: number,
+	query?: string
+) {
+	let url = `${BASE_PATH}/${mediaType}/${endpoint}`;
+
+	if (movieId) {
+		url = url.replace("{movie_id}", movieId.toString());
+	}
+
+	const params = new URLSearchParams({
+		api_key: API_KEY,
+		language: "en-US",
+		query: query || "",
+	});
+
+	url += `?${params.toString()}`;
+
+	return fetch(url).then((response) => response.json());
+}
+
+/*
+fetchData('movie/top_rated').then((response) => {
+  // Handle response
+});
+
+fetchData('movie/popular').then((response) => {
+  // Handle response
+});
+
+fetchData('movie/top_rated').then((response) => {
+  // Handle response
+});
+
+fetchData(`movie/${movie_id}/recommendations`, movie_id).then((response) => {
+  // Handle response
+});
+
+fetchData(`movie/${movie_id}/videos`, movie_id).then((response) => {
+  // Handle response
+});
+
+fetchData(`movie/${movie_id}/images`, movie_id).then((response) => {
+  // Handle response
+});
+
+fetchData(`movie/${movie_id}/credits`, movie_id).then((response) => {
+  // Handle response
+});
+
+fetchData(`movie/${movie_id}`, movie_id).then((response) => {
+  // Handle response
+});
+
+fetchData('search/multi', null, 'Harry Potter').then((response) => {
+  // Handle response
+});
+
+
+*/
+
 export function getMovies() {
 	return fetch(
 		`${BASE_PATH}/movie/top_rated?api_key=${API_KEY}&language=en-US`

@@ -10,17 +10,18 @@ import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { motion, useScroll } from "framer-motion";
 import {
-	makeImagePath,
 	formatRating,
 	formatTime,
-	getReleaseYear,
-	formatGenres,
-	NETFLIX_LOGO_URL,
 	formatCountry,
+	formatGenres,
+	formatVoteCount,
+} from "../utils/format";
+import {
+	makeImagePath,
 	makeAvatarPath,
 	makeMovieLogoPath,
-	formatVoteCount,
-} from "../utils";
+} from "../utils/makePath";
+import { NETFLIX_LOGO_URL } from "../utils/consts";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { useQuery } from "react-query";
 import {

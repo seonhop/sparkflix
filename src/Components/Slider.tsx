@@ -4,16 +4,14 @@ import { useState, useEffect } from "react";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
 import { Cast } from "../Interfaces/API/IGetCredits";
 import {
-	OFF_SET,
-	makeImagePath,
-	SLIDER_MARGIN,
 	formatTime,
 	formatRating,
 	formatGenres,
-	NETFLIX_LOGO_URL,
-	makeAvatarPath,
 	formatVoteCount,
-} from "../utils";
+} from "../utils/format";
+import { OFF_SET, SLIDER_MARGIN, NETFLIX_LOGO_URL } from "../utils/consts";
+import { makeImagePath, makeAvatarPath } from "../utils/makePath";
+
 import { useNavigate } from "react-router-dom";
 import { favMovieDict } from "../favMovies";
 import { favMovieIDs } from "../favMovies";
@@ -21,7 +19,7 @@ import {
 	ISliderBtnPos,
 	IHeroSlider,
 	ISlider,
-} from "../Interfaces/Components/Slider";
+} from "../Interfaces/Components/ISlider";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import React from "react";
 import { useQuery } from "react-query";
@@ -141,7 +139,7 @@ const boxVariants = {
 		},
 	},
 	exit: {
-		zIndex: 4,
+		zIndex: 5,
 	},
 };
 
