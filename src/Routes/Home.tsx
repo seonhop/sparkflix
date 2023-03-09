@@ -13,7 +13,7 @@ import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
-import { favMovieIDs, favMovieDict } from "../favMovies";
+import { favMovieIDs, favMovieDict } from "../utils/favMovies";
 import {
 	Outlet,
 	useNavigate,
@@ -21,7 +21,7 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { OFF_SET, SPIDERMAN_ID, SLIDER_MARGIN } from "../utils/consts";
+import { OFF_SET, HERO_ID as HERO_ID, SLIDER_MARGIN } from "../utils/consts";
 import { HeroSlider, Slider } from "../Components/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
@@ -88,19 +88,16 @@ const Section = styled.div`
 `;
 
 function Home() {
+	const navigate = useNavigate();
 	const onHeroClick = () => {
-		navigate(`/movies/${SPIDERMAN_ID}`);
+		navigate(`/movies/${HERO_ID}`);
 	};
 	const [isDoneLoading, setIsDoneLoading] = useState(false);
-	const navigate = useNavigate();
 	const { data: heroImage, isLoading: heroImageLoading } =
-		useQuery<IGetImagesResult>(["heroImage", SPIDERMAN_ID], () =>
-			getImages(SPIDERMAN_ID)
+		useQuery<IGetImagesResult>(["heroImage", HERO_ID], () =>
+			getImages(HERO_ID)
 		);
-	const { data: heroData } = useQuery<IGetMovieDetailResult>(
-		["heroData", SPIDERMAN_ID],
-		() => getMovieDetail(SPIDERMAN_ID)
-	);
+
 	const { data: favMovieImages, isLoading: favImageLoading } = useQuery<
 		IGetImagesResult[]
 	>(["favMovieImages", favMovieIDs], async () => {

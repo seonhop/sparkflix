@@ -1,5 +1,7 @@
+import { type } from "os";
+
 export const OFF_SET = 6;
-export const SPIDERMAN_ID = 324857; //569094 324857
+export const HERO_ID = 324857; //569094 324857
 export const SLIDER_MARGIN = -window.innerHeight * 0.05;
 export const NETFLIX_LOGO_URL =
 	"https://assets.brand.microsites.netflix.io/assets/2800a67c-4252-11ec-a9ce-066b49664af6_cm_800w.jpg?v=4";
@@ -25,3 +27,9 @@ export const ENDPOINT_DICT: IENDPOINT_DICT = {
 	details: { endpoint: "{media_id}", requiresId: true },
 	reviews: { endpoint: "{media_id}/reviews", requiresId: true },
 };
+
+export const ENDPOINT_KEYS: Record<string, string> = {};
+
+for (const key in ENDPOINT_DICT) {
+	ENDPOINT_KEYS[key] = key;
+}

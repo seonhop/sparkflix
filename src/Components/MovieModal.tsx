@@ -5,7 +5,7 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { favMovieDict } from "../favMovies";
+import { favMovieDict } from "../utils/favMovies";
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { motion, useScroll } from "framer-motion";

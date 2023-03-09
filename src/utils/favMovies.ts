@@ -6,7 +6,7 @@ interface IFavMovie {
 	logoWidth: string;
 }
 
-interface IFavInfo {
+export interface IFavMovieIDs {
 	title: string;
 	id: number;
 }
@@ -257,7 +257,7 @@ export const favMovieDict: IFavDict = {
 	},
 };
 
-export const favMovieIDs: IFavInfo[] = [
+export const favMovieIDs: IFavMovieIDs[] = [
 	{
 		title: "Baby Driver",
 		id: 339403,

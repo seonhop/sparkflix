@@ -13,8 +13,8 @@ import { OFF_SET, SLIDER_MARGIN, NETFLIX_LOGO_URL } from "../utils/consts";
 import { makeImagePath, makeAvatarPath } from "../utils/makePath";
 
 import { useNavigate } from "react-router-dom";
-import { favMovieDict } from "../favMovies";
-import { favMovieIDs } from "../favMovies";
+import { favMovieDict } from "../utils/favMovies";
+import { favMovieIDs } from "../utils/favMovies";
 import {
 	ISliderBtnPos,
 	IHeroSlider,
