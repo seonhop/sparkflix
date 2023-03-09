@@ -22,7 +22,7 @@ import {
 	useOutletContext,
 } from "react-router-dom";
 import { OFF_SET, HERO_ID as HERO_ID, SLIDER_MARGIN } from "../utils/consts";
-import { HeroSlider, Slider } from "../Components/Slider";
+import { HeroSlider, Slider } from "../Components/Slider/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
 import { useQueryParams } from "../utils/utils";

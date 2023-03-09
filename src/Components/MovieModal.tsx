@@ -36,7 +36,7 @@ import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
 import { Cast, IGetCredits } from "../Interfaces/API/IGetCredits";
 import React from "react";
-import { CastSlider, ReviewSlider } from "./Slider";
+import { CastSlider, ReviewSlider } from "./Slider/Slider";
 import { click } from "@testing-library/user-event/dist/click";
 import { IGetReviews } from "../Interfaces/API/IGetReviews";
 import { IGetRecommendsResults } from "../Interfaces/API/IGetRecommends";

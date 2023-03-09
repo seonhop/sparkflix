@@ -1,33 +1,34 @@
 import styled from "styled-components";
+import SliderButton from "./SliderBtn";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { IGetImagesResult } from "../Interfaces/API/IGetImages";
-import { Cast } from "../Interfaces/API/IGetCredits";
+import { IGetImagesResult } from "../../Interfaces/API/IGetImages";
+import { Cast } from "../../Interfaces/API/IGetCredits";
 import {
 	formatTime,
 	formatRating,
 	formatGenres,
 	formatVoteCount,
-} from "../utils/format";
-import { OFF_SET, SLIDER_MARGIN, NETFLIX_LOGO_URL } from "../utils/consts";
-import { makeImagePath, makeAvatarPath } from "../utils/makePath";
+} from "../../utils/format";
+import { OFF_SET, SLIDER_MARGIN, NETFLIX_LOGO_URL } from "../../utils/consts";
+import { makeImagePath, makeAvatarPath } from "../../utils/makePath";
 
 import { useNavigate } from "react-router-dom";
-import { favMovieDict } from "../utils/favMovies";
-import { favMovieIDs } from "../utils/favMovies";
+import { favMovieDict } from "../../utils/favMovies";
+import { favMovieIDs } from "../../utils/favMovies";
 import {
 	ISliderBtnPos,
 	IHeroSlider,
 	ISlider,
-} from "../Interfaces/Components/ISlider";
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
+} from "../../Interfaces/Components/ISlider";
+import { IGetMovieDetailResult } from "../../Interfaces/API/IGetMovieDetail";
 import React from "react";
 import { useQuery } from "react-query";
-import { IGetVideosResult } from "../Interfaces/API/IGetVideos";
-import { getVideos } from "../api";
-import { MidDot } from "./MidDot";
-import { Genres } from "./Genres";
-import { ReviewResults } from "../Interfaces/API/IGetReviews";
+import { IGetVideosResult } from "../../Interfaces/API/IGetVideos";
+import { getVideos } from "../../api";
+import { MidDot } from "../MidDot";
+import { Genres } from "../Genres";
+import { ReviewResults } from "../../Interfaces/API/IGetReviews";
 
 const SliderWrapper = styled.div<{ margin?: number }>`
 	position: relative;
@@ -862,7 +863,7 @@ export function Slider({
 										</AnimatePresence>
 									</Box>
 								))}
-						<SliderBtn
+						<SliderButton manipulateIndex = {() => manipulateIndex("left", maxIndex)} maxIndex = {maxIndex} >
 							variants={sliderBtnVariants}
 							transition={{ type: "tween" }}
 							pos="left"
@@ -871,7 +872,7 @@ export function Slider({
 							<SliderBtnIcon className="material-icons">
 								arrow_back_ios
 							</SliderBtnIcon>
-						</SliderBtn>
+						</SliderButton>
 						<SliderBtn
 							variants={sliderBtnVariants}
 							transition={{ type: "tween" }}
