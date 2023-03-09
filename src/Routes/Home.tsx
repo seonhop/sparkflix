@@ -25,6 +25,13 @@ import { OFF_SET, HERO_ID as HERO_ID, SLIDER_MARGIN } from "../utils/consts";
 import { HeroSlider, Slider } from "../Components/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
+import { useQueryParams } from "../utils/utils";
+import { heroDataParams } from "../utils/dataParams";
+import {
+	nowPlayingDataParams,
+	topRatedDataParams,
+	popularDataParams,
+} from "../utils/dataParams/homeDataParams";
 
 const Container = styled.div`
 	display: flex;
@@ -98,126 +105,50 @@ function Home() {
 			getImages(HERO_ID)
 		);
 
-	const { data: favMovieImages, isLoading: favImageLoading } = useQuery<
-		IGetImagesResult[]
-	>(["favMovieImages", favMovieIDs], async () => {
-		const promises = favMovieIDs.map((favmovie) => getImages(favmovie.id));
-		return Promise.all(promises);
+	const {
+		images: favImages,
+		details: favDetails,
+		isLoading: isHeroLoading,
+	} = useQueryParams({
+		...heroDataParams,
 	});
-	const { data: favMovieDetails, isLoading: favDetailLoading } = useQuery<
-		IGetMovieDetailResult[]
-	>(["favMovieDetails", favMovieIDs], async () => {
-		const promises = favMovieIDs.map((favmovie) => getMovieDetail(favmovie.id));
-		return Promise.all(promises);
+	const {
+		images: nowPlayingImages,
+		details: nowPlayingDetails,
+		isLoading: isNowPlayingLoading,
+	} = useQueryParams({
+		...nowPlayingDataParams,
 	});
-	const isHeroLoading = heroImageLoading || favImageLoading || favDetailLoading;
-	const { data: popularMovies, isLoading: popularMoviesLoading } =
-		useQuery<IGetResult>(["popular", "popularMovies"], () => getPopular());
-	const { data: popularMovieDetails, isLoading: popMovieDetailLoading } =
-		useQuery<IGetMovieDetailResult[]>(
-			["popMovieDetails", popularMovies],
-			async () => {
-				if (!popularMovies) {
-					return [];
-				}
-				const promises =
-					popularMovies &&
-					popularMovies?.results.map((favmovie) => getMovieDetail(favmovie.id));
-				return Promise.all(promises);
-			}
-		);
-	const { data: popularMovieImages, isLoading: popMovieImagesLoading } =
-		useQuery<IGetImagesResult[]>(
-			["popMovieImages", popularMovies],
-			async () => {
-				if (!popularMovies) {
-					return [];
-				}
-				const promises =
-					popularMovies &&
-					popularMovies?.results.map((favmovie) => getImages(favmovie.id));
-				return Promise.all(promises);
-			}
-		);
-	const movieImages = favMovieImages ? [...favMovieImages] : [];
-	const { data: topRatedMovies } = useQuery<IGetResult>(
-		["topRated", "movies"],
-		() => getMovies()
-	);
-	const { data: topRatedDetails, isLoading: topRatedDetailsLoading } = useQuery<
-		IGetMovieDetailResult[]
-	>(["topRated", "details"], async () => {
-		if (!topRatedMovies) {
-			return [];
-		}
-		const promises =
-			topRatedMovies &&
-			topRatedMovies?.results.map((favmovie) => getMovieDetail(favmovie.id));
-		return Promise.all(promises);
+	const {
+		images: topRatedImages,
+		details: topRatedDetails,
+		isLoading: isTopRatedLoading,
+	} = useQueryParams({
+		...topRatedDataParams,
 	});
-	const { data: topRatedImages, isLoading: topRatedImagesLoading } = useQuery<
-		IGetImagesResult[]
-	>(["topRated", "images"], async () => {
-		if (!topRatedMovies) {
-			return [];
-		}
-		const promises =
-			topRatedMovies &&
-			topRatedMovies?.results.map((nowPlaying) => getImages(nowPlaying.id));
-		return Promise.all(promises);
+	const {
+		images: popularImages,
+		details: popularDetails,
+		isLoading: isPopularLoading,
+	} = useQueryParams({
+		...popularDataParams,
 	});
-
-	const { data: nowPlayingMovies } = useQuery<IGetResult>(
-		["nowPlaying", "nowPlayingMovies"],
-		() => getNowPlaying()
-	);
-	const { data: nowPlayingDetails, isLoading: nowPlayingDetailsLoading } =
-		useQuery<IGetMovieDetailResult[]>(["nowPlaying", "details"], async () => {
-			if (!nowPlayingMovies) {
-				return [];
-			}
-			const promises =
-				nowPlayingMovies &&
-				nowPlayingMovies?.results.map((favmovie) =>
-					getMovieDetail(favmovie.id)
-				);
-			return Promise.all(promises);
-		});
-	const { data: nowPlayingImages, isLoading: nowPlayingImagesLoading } =
-		useQuery<IGetImagesResult[]>(
-			["nowPlayingImages", nowPlayingMovies],
-			async () => {
-				if (!nowPlayingMovies) {
-					return [];
-				}
-				const promises =
-					nowPlayingMovies &&
-					nowPlayingMovies?.results.map((nowPlaying) =>
-						getImages(nowPlaying.id)
-					);
-				return Promise.all(promises);
-			}
-		);
-	const isPopularLoading = !popMovieDetailLoading && !popMovieImagesLoading;
-	const isNowPlayingLoading =
-		!nowPlayingDetailsLoading && !nowPlayingImagesLoading;
 
 	useEffect(() => {
-		setIsDoneLoading(true);
-	}, [
-		popMovieDetailLoading,
-		popMovieImagesLoading,
-		nowPlayingDetailsLoading,
-		nowPlayingImagesLoading,
-	]);
-	console.log(isDoneLoading);
+		setIsDoneLoading(
+			!isHeroLoading ||
+				!isNowPlayingLoading ||
+				!isTopRatedLoading ||
+				!isPopularLoading
+		);
+	}, [isHeroLoading, isNowPlayingLoading, isTopRatedLoading, isPopularLoading]);
 	return (
 		<Container>
-			{isHeroLoading ? (
+			{heroImageLoading && !isDoneLoading ? (
 				<Loader />
 			) : (
-				favMovieImages &&
-				favMovieDetails && (
+				favImages &&
+				favDetails && (
 					<>
 						<Hero
 							bgPhoto={makeImagePath(heroImage?.backdrops[0].file_path || "")}
@@ -230,45 +161,44 @@ function Home() {
 							</HeroTitleContainer>
 						</Hero>
 						<HeroSlider
-							heroMovieImages={favMovieImages}
-							heroMovieDetails={favMovieDetails}
+							heroMovieImages={favImages}
+							heroMovieDetails={favDetails}
 						/>
-						{isDoneLoading && (
-							<>
-								<Section>
-									<h1>Popular</h1>
-									{popularMovieImages && popularMovieDetails && (
-										<Slider
-											imageData={popularMovieImages}
-											detailData={popularMovieDetails}
-											sliderType="popular"
-										/>
-									)}
-								</Section>
-								<Section>
-									<h1>Now Playing</h1>
-									{nowPlayingImages && nowPlayingDetails && (
-										<Slider
-											imageData={nowPlayingImages}
-											detailData={nowPlayingDetails}
-											sliderType="nowPlaying"
-										/>
-									)}
-								</Section>
-								<Section>
-									<h1>Top Rated</h1>
-									{topRatedDetails && topRatedImages && (
-										<Slider
-											imageData={topRatedImages}
-											detailData={topRatedDetails}
-											sliderType="topRated"
-										/>
-									)}
-								</Section>
-							</>
-						)}
 
-						<Outlet context={{ movieImages: movieImages }} />
+						<>
+							<Section>
+								<h1>Popular</h1>
+								{popularImages && popularDetails && (
+									<Slider
+										imageData={popularImages}
+										detailData={popularDetails}
+										sliderType="popular"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Now Playing</h1>
+								{nowPlayingImages && nowPlayingDetails && (
+									<Slider
+										imageData={nowPlayingImages}
+										detailData={nowPlayingDetails}
+										sliderType="nowPlaying"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Top Rated</h1>
+								{topRatedDetails && topRatedImages && (
+									<Slider
+										imageData={topRatedImages}
+										detailData={topRatedDetails}
+										sliderType="topRated"
+									/>
+								)}
+							</Section>
+						</>
+
+						<Outlet />
 					</>
 				)
 			)}

@@ -5,6 +5,7 @@ import { favMovieIDs, IFavMovieIDs } from "./favMovies";
 import { IGetResult } from "../Interfaces/API/IGetResults";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { IGetImagesResult } from "../Interfaces/API/IGetImages";
+import { useEffect } from "react";
 
 export interface IQueryParams {
 	endpoint: string;
@@ -18,23 +19,43 @@ A function for fetching different movie/tv data such as popular, top_rated, etc.
 `defaultData`, if exists, would be a list containing my favorite movies' titles and IDs
 */
 
-const useQueryParams = ({
+const SelectData = ({
 	endpoint,
 	identifier,
 	existsDefaultData,
 	mediaType,
 }: IQueryParams) => {
-	const fetchData_endpoint = ENDPOINT_DICT[endpoint].endpoint;
-	//Fetching results for a selected endpoint such as popular, top_rated, now_playing, etc
+	const fetchData_endpoint = ENDPOINT_DICT[endpoint]?.endpoint;
 	const { data: movieData, isLoading: moviesLoading } = useQuery<IGetResult>(
 		[endpoint, identifier, "movies"],
 		() => fetchData(fetchData_endpoint, mediaType)
 	);
-	const movies = existsDefaultData
-		? favMovieIDs
-		: useQuery<IGetResult>([endpoint, identifier, "movies"], () =>
-				fetchData(fetchData_endpoint, mediaType)
-		  ).data?.results || [];
+	if (existsDefaultData) {
+		return favMovieIDs;
+	}
+	return movieData?.results;
+};
+
+export const useQueryParams = ({
+	endpoint,
+	identifier,
+	existsDefaultData,
+	mediaType,
+}: IQueryParams) => {
+	const fetchData_endpoint = ENDPOINT_DICT[endpoint]?.endpoint;
+	const { data: movieData, isLoading: moviesLoading } = useQuery<IGetResult>(
+		[endpoint, identifier, "movies"],
+		() => fetchData(fetchData_endpoint, mediaType)
+	);
+
+	const movies = SelectData({
+		endpoint,
+		identifier,
+		existsDefaultData,
+		mediaType,
+	});
+
+	//Fetching results for a selected endpoint such as popular, top_rated, now_playing, etc
 
 	const { data: details, isLoading: detailsLoading } = useQuery<
 		IGetMovieDetailResult[]
@@ -57,11 +78,9 @@ const useQueryParams = ({
 	});
 
 	return {
-		data: {
-			movies,
-			details,
-			images,
-		},
+		movies,
+		details,
+		images,
 		isLoading: moviesLoading || detailsLoading || imagesLoading,
 	};
 };
