@@ -12,6 +12,7 @@ import {
 	formatGenres,
 	NETFLIX_LOGO_URL,
 	makeAvatarPath,
+	formatVoteCount,
 } from "../utils";
 import { useNavigate } from "react-router-dom";
 import { favMovieDict } from "../favMovies";
@@ -41,7 +42,6 @@ const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
 	opacity: 0;
 	background-color: rgba(0, 0, 0, 0.5);
 	position: absolute;
-	top: 15%;
 	width: 3.5rem;
 	height: 120px;
 	display: flex;
@@ -53,6 +53,10 @@ const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
 	:hover {
 		cursor: pointer;
 	}
+`;
+
+const SliderBtnBigMovie = styled(SliderBtn)`
+	top: 15%;
 `;
 
 const sliderBtnVariants = {
@@ -115,33 +119,35 @@ const Box = styled(motion.div)`
 	}
 	:hover {
 		cursor: pointer;
-		box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 1px, rgba(0, 0, 0, 0.07) 0px 2px 2px,
-			rgba(0, 0, 0, 0.07) 0px 4px 4px, rgba(0, 0, 0, 0.07) 0px 8px 8px,
-			rgba(0, 0, 0, 0.07) 0px 16px 16px;
+		box-shadow: rgba(0, 0, 0, 0.2) 0px 20px 30px;
 	}
 `;
 
 const boxVariants = {
 	normal: {
-		scale: 1,
-		transitionEnd: { zIndex: 1 },
 		zIndex: 1,
+		scale: 1,
+		opacity: 1,
+		transition: { duration: 0.5 },
 	},
 	hover: {
-		zIndex: 2,
-		scale: 1.3,
-		y: -100,
+		scale: 1.2,
+		y: -50,
+		zIndex: 4,
 		transition: {
-			delay: 1,
-			duration: 0.1,
+			delay: 0.3,
+			duration: 0.2,
 			type: "tween",
 		},
+	},
+	exit: {
+		zIndex: 4,
 	},
 };
 
 const BoxImgContainer = styled(motion.div)<{
 	bgphoto?: string;
-	pos: (string | number)[];
+	pos: (string | number)[] | string;
 	transform: (string | number)[];
 	logowidth: string;
 }>`
@@ -149,6 +155,15 @@ const BoxImgContainer = styled(motion.div)<{
 	background-size: cover;
 	background-position: center center;
 	height: 120px;
+	&::after {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-image: linear-gradient(to top, #1f1f1f, 1%, transparent);
+	}
 
 	> img:first-child {
 		max-height: 100%;
@@ -160,10 +175,18 @@ const BoxImgContainer = styled(motion.div)<{
 		bottom: ${(props) => props.pos[2]};
 		left: ${(props) => props.pos[3]};
 		width: ${(props) => props.logowidth};
+		max-height: 40%;
 		transform: translate(
 			${(props) => props.transform[0]},
 			${(props) => props.transform[1]}
 		);
+	}
+	> h2 {
+		position: absolute;
+		bottom: 2vh;
+		left: 2vh;
+		font-size: 2vh;
+		width: 40%;
 	}
 `;
 
@@ -175,6 +198,7 @@ const Info = styled(motion.div)`
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
+	position: relative;
 	h4 {
 		text-align: center;
 		font-size: 18px;
@@ -213,20 +237,56 @@ const Info = styled(motion.div)`
 		font-size: 0.9rem;
 	}
 `;
-
 const infoVariants = {
-	hidden: {
-		opacity: 1,
-	},
 	hover: {
 		opacity: 1,
 		scale: 0.9,
 		transition: {
-			duaration: 0.1,
+			delay: 0.5,
+			duaration: 0.3,
 			type: "tween",
 		},
 	},
 };
+
+function InfoPopup({
+	isHovered,
+	movie,
+	onExpandClicked,
+}: {
+	isHovered: boolean;
+	movie: IGetMovieDetailResult;
+	onExpandClicked: (movieId: string) => void;
+}) {
+	return (
+		<Info variants={infoVariants}>
+			<div>
+				<span className="material-icons-outlined">favorite_border</span>
+				<span
+					className="material-icons"
+					onClick={() => onExpandClicked(movie.id + "")}
+				>
+					expand_more
+				</span>
+			</div>
+			<div>
+				<div>
+					<span className="material-icons">star</span>
+					<span>
+						{formatRating(movie?.vote_average) +
+							" " +
+							formatVoteCount(movie?.vote_count)}
+					</span>
+				</div>
+				<MidDot />
+				<span>{formatTime(movie.runtime || 0)}</span>
+			</div>
+			<div>
+				<Genres movie={movie} />
+			</div>
+		</Info>
+	);
+}
 
 interface IPaginationProps {
 	maxindex: number;
@@ -354,13 +414,25 @@ interface IReviewSliderProps {
 	movieId: string;
 }
 
-const ReviewCardWrapper = styled(motion.div)`
+const ReviewCardWrapper = styled(motion.div)<{
+	arePages: boolean;
+	noReview: boolean;
+}>`
 	position: absolute;
 	width: 100%;
 	height: 26vh;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: ${(props) =>
+		props.noReview ? `1fr` : `repeat(2, 1fr)`};
 	grid-gap: 20px;
+	div:first-child {
+		display: ${(props) => props.noReview && "flex"};
+		align-items: ${(props) => props.noReview && "center"};
+		justify-content: ${(props) => props.noReview && "center"};
+		color: ${(props) => props.noReview && props.theme.white.darker};
+		border: ${(props) =>
+			props.noReview && `1px dashed ${props.theme.black.lighter}`};
+	}
 `;
 
 const ReviewCard = styled(motion.div)`
@@ -415,20 +487,24 @@ const ReviewCard = styled(motion.div)`
 
 export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 	const [arePages, setArePages] = useState(true);
+	const [noReview, setNoReview] = useState(false);
 	const [dirRight, setDirRight] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [leaving, setLeaving] = useState(false);
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
-	const totalCast = reviews.length;
+	const totalReviews = reviews.length;
 	const offset = 2;
-	const maxIndex = Math.ceil(totalCast / offset) - 1;
+	const maxIndex = Math.ceil(totalReviews / offset) - 1;
 	useEffect(() => {
-		if (maxIndex === 0) {
+		if (totalReviews <= offset) {
 			setArePages(false);
 		}
-	}, [arePages]);
+		if (totalReviews <= 0) {
+			setNoReview(true);
+		}
+	}, [arePages, noReview]);
 
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
 		if (reviews) {
@@ -444,9 +520,7 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 			}
 		}
 	};
-	console.log(reviews);
-	console.log(reviews.slice(offset * index, offset * index + offset));
-
+	console.log(arePages);
 	return (
 		<>
 			<SliderWrapper>
@@ -464,8 +538,12 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 						key={"review" + movieId + index}
 						transition={{ type: "tween", duration: 1 }}
 						custom={dirRight}
+						arePages={arePages}
+						noReview={noReview}
 					>
-						{reviews &&
+						{noReview ? (
+							<div> NO REVIEWS YET</div>
+						) : (
 							reviews
 								.slice(offset * index, offset * index + offset)
 								.map((review, index) => (
@@ -499,11 +577,12 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 											}}
 										/>
 									</ReviewCard>
-								))}
+								))
+						)}
 						{arePages && (
 							<>
 								{" "}
-								<SliderBtn
+								<SliderBtnBigMovie
 									variants={sliderBtnVariants}
 									transition={{ type: "tween" }}
 									pos="left"
@@ -512,8 +591,8 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 									<SliderBtnIcon className="material-icons">
 										arrow_back_ios
 									</SliderBtnIcon>
-								</SliderBtn>
-								<SliderBtn
+								</SliderBtnBigMovie>
+								<SliderBtnBigMovie
 									variants={sliderBtnVariants}
 									transition={{ type: "tween" }}
 									pos="right"
@@ -522,7 +601,7 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 									<SliderBtnIcon className="material-icons">
 										arrow_forward_ios
 									</SliderBtnIcon>
-								</SliderBtn>
+								</SliderBtnBigMovie>
 								<BigMoviePagination
 									maxindex={maxIndex}
 									currindex={index}
@@ -621,7 +700,7 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 							))}
 						{arePages && (
 							<>
-								<SliderBtn
+								<SliderBtnBigMovie
 									variants={sliderBtnVariants}
 									transition={{ type: "tween" }}
 									pos="left"
@@ -630,8 +709,8 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 									<SliderBtnIcon className="material-icons">
 										arrow_back_ios
 									</SliderBtnIcon>
-								</SliderBtn>
-								<SliderBtn
+								</SliderBtnBigMovie>
+								<SliderBtnBigMovie
 									variants={sliderBtnVariants}
 									transition={{ type: "tween" }}
 									pos="right"
@@ -640,7 +719,7 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 									<SliderBtnIcon className="material-icons">
 										arrow_forward_ios
 									</SliderBtnIcon>
-								</SliderBtn>
+								</SliderBtnBigMovie>
 								<BigMoviePagination
 									maxindex={maxIndex}
 									currindex={index}
@@ -662,13 +741,39 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 	);
 }
 
-export function Slider({ imageData, detailData, wrapperMargin }: ISlider) {
+interface IMovieLogoPosProps {
+	title: string;
+	id: number;
+	pos: (number | string)[];
+	transform: (number | string)[];
+	logoWidth: string;
+}
+
+export function Slider({
+	imageData,
+	detailData,
+	wrapperMargin,
+	sliderType,
+}: ISlider) {
 	const navigate = useNavigate();
 	const [dirRight, setDirRight] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [leaving, setLeaving] = useState(false);
+	const [isHovered, setIsHoverd] = useState("");
 	const [isMyComponentVisible, setIsMyComponentVisible] = useState(false);
+	const [isHoveredMap, setIsHoveredMap] = useState<{ [key: string]: boolean }>(
+		{}
+	);
+	const [hoveredIndex, setHoveredIndex] = useState(-1);
 
+	const handleBoxIndexHover = (index: number) => {
+		setHoveredIndex(index);
+	};
+
+	// function to handle box hover events
+	const handleBoxHover = (movieId: number, isHovered: boolean) => {
+		setIsHoveredMap((prevMap) => ({ ...prevMap, [movieId]: isHovered }));
+	};
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
@@ -711,72 +816,54 @@ export function Slider({ imageData, detailData, wrapperMargin }: ISlider) {
 						transition={{ type: "tween", duration: 1 }}
 						custom={dirRight}
 					>
-						{detailData
-							?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
-							.map((movie) => (
-								<Box
-									variants={boxVariants}
-									initial="normal"
-									whileHover="hover"
-									transition={{ type: "tween" }}
-									key={movie.id}
-									layoutId={movie.id + ""}
-								>
-									<BoxImgContainer
-										pos={favMovieDict[String(movie.id)].pos}
-										transform={favMovieDict[String(movie.id)].transform}
-										logowidth={favMovieDict[String(movie.id)].logoWidth}
+						{detailData &&
+							detailData
+								?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
+								.map((movie) => (
+									<Box
+										variants={boxVariants}
+										initial="normal"
+										whileHover="hover"
+										exit="exit"
+										transition={{ type: "tween" }}
+										key={movie.id}
+										layoutId={movie.id + "" + sliderType}
+										onMouseEnter={() => handleBoxIndexHover(movie.id)}
+										onMouseLeave={() => handleBoxIndexHover(-1)}
 									>
-										<img
-											src={makeImagePath(
-												movie.backdrop_path || movie.poster_path,
-												"w500"
-											)}
-										/>
-										{imageData.find((obj) => obj.id === movie.id)?.logos[0]
-											.file_path ? (
+										<BoxImgContainer
+											pos={["none", "none", 0, 0]}
+											transform={["2vh", "-2vh"]}
+											logowidth={"35%"}
+										>
 											<img
 												src={makeImagePath(
-													imageData.find((obj) => obj.id === movie.id)?.logos[0]
-														.file_path || "",
+													movie.backdrop_path || movie.poster_path,
 													"w500"
 												)}
 											/>
-										) : (
-											<h1>{favMovieDict[String(movie.id)].title}</h1>
-										)}
-									</BoxImgContainer>
-
-									<Info variants={infoVariants}>
-										<div>
-											<span className="material-icons-outlined">
-												favorite_border
-											</span>
-											<span
-												className="material-icons"
-												onClick={() => onExpandClicked(movie.id + "")}
-											>
-												expand_more
-											</span>
-										</div>
-										<div>
-											<div>
-												<span className="material-icons">star</span>
-												<span>
-													{formatRating(movie?.vote_average) +
-														" " +
-														`(${movie?.vote_count.toLocaleString()})`}
-												</span>
-											</div>
-											<MidDot />
-											<span>{formatTime(movie.runtime || 0)}</span>
-										</div>
-										<div>
-											<Genres movie={movie} />
-										</div>
-									</Info>
-								</Box>
-							))}
+											{imageData?.find((obj) => obj.id === movie.id)
+												?.logos[0] ? (
+												<img
+													src={makeImagePath(
+														imageData.find((obj) => obj.id === movie.id)
+															?.logos[0].file_path,
+														"w500"
+													)}
+												/>
+											) : (
+												<h2>{movie.title}</h2>
+											)}
+										</BoxImgContainer>
+										<AnimatePresence initial={false}>
+											<InfoPopup
+												isHovered={hoveredIndex === movie.id}
+												movie={movie}
+												onExpandClicked={onExpandClicked}
+											/>
+										</AnimatePresence>
+									</Box>
+								))}
 						<SliderBtn
 							variants={sliderBtnVariants}
 							transition={{ type: "tween" }}
@@ -854,9 +941,8 @@ export function HeroSlider({ heroMovieImages, heroMovieDetails }: IHeroSlider) {
 		const promises = heroMovieDetails.map((movie) => getVideos(movie.id));
 		return Promise.all(promises);
 	});
-	console.log(heroMovieVideos);
 
-	const onBoxClicked = (movieId: string) => {
+	const onExpandClicked = (movieId: string) => {
 		navigate(`/movies/${movieId}`);
 	};
 
@@ -913,31 +999,11 @@ export function HeroSlider({ heroMovieImages, heroMovieDetails }: IHeroSlider) {
 											<h1>{favMovieDict[String(movie.id)].title}</h1>
 										)}
 									</BoxImgContainer>
-
-									<Info variants={infoVariants}>
-										<div>
-											<span className="material-icons-outlined">
-												favorite_border
-											</span>
-											<span
-												className="material-icons"
-												onClick={() => onBoxClicked(movie.id + "")}
-											>
-												expand_more
-											</span>
-										</div>
-										<div>
-											<div>
-												<span className="material-icons">star</span>
-												<span>{formatRating(movie?.vote_average)}</span>
-											</div>
-											<MidDot />
-											<span>{formatTime(movie.runtime || 0)}</span>
-										</div>
-										<div>
-											<Genres movie={movie} />
-										</div>
-									</Info>
+									<InfoPopup
+										isHovered={true}
+										movie={movie}
+										onExpandClicked={onExpandClicked}
+									/>
 								</Box>
 							))}
 						<SliderBtn

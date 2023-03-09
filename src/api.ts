@@ -13,6 +13,18 @@ export function getPopular() {
 	).then((response) => response.json());
 }
 
+export function getTopRated() {
+	return fetch(
+		`${BASE_PATH}/movie/popular?api_key=${API_KEY}&language=en-US`
+	).then((response) => response.json());
+}
+
+export function getNowPlaying() {
+	return fetch(
+		`${BASE_PATH}/movie/now_playing?api_key=${API_KEY}&language=en-US`
+	).then((response) => response.json());
+}
+
 export function getRecommends(movie_id: number) {
 	return fetch(
 		`${BASE_PATH}/movie/${movie_id}/recommendations?api_key=${API_KEY}&language=en-US`

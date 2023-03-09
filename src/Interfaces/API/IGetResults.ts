@@ -1,4 +1,4 @@
-export interface IGetPopularResult {
+export interface IGetResult {
 	page: number;
 	results: Result[];
 	total_pages: number;

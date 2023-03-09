@@ -12,6 +12,18 @@ export function makeImagePath(
 	return NETFLIX_LOGO_URL;
 }
 
+export function makeMovieLogoPath(
+	imageId: string | undefined,
+	format?: string
+) {
+	if (imageId) {
+		return `https://image.tmdb.org/t/p/${
+			format ? format : "original"
+		}/${imageId}`;
+	}
+	return undefined;
+}
+
 export function makeAvatarPath(path: string | null) {
 	const htmlUrlRegExp = /^(http|https):\/\/[^\s/$.?#].[^\s]*$/;
 	const tmpPath = path?.startsWith("/") ? path.slice(1) : path;
@@ -38,11 +50,18 @@ export function formatRating(vote_average: number | undefined) {
 	}
 }
 
+export function formatVoteCount(vote_count: number | undefined) {
+	if (vote_count) {
+		return `(${vote_count.toLocaleString()})`;
+	}
+	return "";
+}
+
 export function getReleaseYear(date: Date | undefined) {
 	if (date) {
 		return date.getFullYear();
 	} else {
-		return "N/A";
+		return "";
 	}
 }
 
@@ -68,7 +87,7 @@ export function formatGenres(
 }
 
 export const OFF_SET = 6;
-export const SPIDERMAN_ID = 324857;
-export const SLIDER_MARGIN = -window.innerHeight * 0.15;
+export const SPIDERMAN_ID = 569094; //569094 324857
+export const SLIDER_MARGIN = -window.innerHeight * 0.05;
 export const NETFLIX_LOGO_URL =
 	"https://assets.brand.microsites.netflix.io/assets/2800a67c-4252-11ec-a9ce-066b49664af6_cm_800w.jpg?v=4";

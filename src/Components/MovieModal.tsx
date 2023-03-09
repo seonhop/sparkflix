@@ -18,6 +18,8 @@ import {
 	NETFLIX_LOGO_URL,
 	formatCountry,
 	makeAvatarPath,
+	makeMovieLogoPath,
+	formatVoteCount,
 } from "../utils";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
 import { useQuery } from "react-query";
@@ -137,7 +139,7 @@ const OverViewWrapper = styled.div`
 	gap: 20px;
 	position: absolute;
 	top: 65vh;
-	min-height: 220vh;
+	min-height: 100vh;
 	width: 100%;
 `;
 
@@ -314,9 +316,10 @@ const CloseBtn = styled.span`
 	background-color: rgba(0, 0, 0, 0.8);
 	color: white;
 	font-size: 24px;
-	position: absolute;
-	top: 2%;
-	right: 2%;
+	position: fixed;
+	top: 7vh;
+	z-index: 999999;
+	right: 21vw;
 	padding: 8px;
 	:hover {
 		cursor: pointer;
@@ -387,6 +390,7 @@ const RecommendationWrapper = styled.div`
 	width: 100%;
 	grid-template-columns: repeat(4, 1fr);
 	grid-gap: 20px;
+	padding: 0 0 40px 0;
 	@media screen and (max-width: 1080px) {
 		grid-template-columns: repeat(3, 1fr); /* for tablet screens */
 	}
@@ -425,8 +429,6 @@ const Recommendation = styled(motion.div)`
 			object-position: center;
 		}
 	}
-	> div:last-child {
-	}
 `;
 
 const recommendVariants = {
@@ -452,7 +454,7 @@ const RecommendTitleBlock = styled.div`
 		color: ${(props) => props.theme.white.lighter};
 		font-weight: 700px;
 		font-size: 1.1rem;
-		padding: 8px 0;
+		padding: 8px 0 2px 0;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -471,7 +473,6 @@ const RecommendationRating = styled.div`
 function MovieModal() {
 	const navigate = useNavigate();
 	const onRecommendClick = (movieId: string) => navigate(`/movies/${movieId}`);
-	const { movieImages } = useOutletContext<IMovideModal>();
 	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
 	console.log(moviePathMatch);
 	const clickedMovieId = moviePathMatch?.params.movieId;
@@ -479,7 +480,11 @@ function MovieModal() {
 		["movieDetailResult", clickedMovieId],
 		() => getMovieDetail(Number(clickedMovieId))
 	);
-	const { data: movieReocmmends, isLoading: isMovieRecommendsLoading } =
+	const { data: movieImages } = useQuery<IGetImagesResult>(
+		["movieImagesResult", clickedMovieId],
+		() => getImages(Number(clickedMovieId))
+	);
+	const { data: movieRecommends, isLoading: isMovieRecommendsLoading } =
 		useQuery<IGetRecommendsResults>(
 			["movieRecommendsResult", clickedMovieId],
 			() => getRecommends(Number(clickedMovieId))
@@ -514,7 +519,7 @@ function MovieModal() {
 		if (movieImages) {
 			setMovieImagesExists(true);
 		}
-		if (movieImages.find((obj) => obj.id + "" === clickedMovieId)?.logos) {
+		if (movieImages?.logos) {
 			setLogoExists(true);
 		}
 	}, [logoExists, movieImages]);
@@ -549,12 +554,10 @@ function MovieModal() {
 											/>
 										</BigCover>
 										<BigTitle>
-											{logoExists && movieImages ? (
+											{logoExists && movieImages?.logos?.[0] ? (
 												<img
-													src={makeImagePath(
-														movieImages?.find(
-															(obj) => obj.id + "" === clickedMovieId
-														)?.logos?.[0]?.file_path || "",
+													src={makeMovieLogoPath(
+														movieImages?.logos?.[0].file_path,
 														"w500"
 													)}
 												/>
@@ -575,10 +578,10 @@ function MovieModal() {
 													</span>
 													<span>
 														{formatGenres(clickedMovie.genres, " / ")}
-														&nbsp;&nbsp;•&nbsp;&nbsp;
-														{formatCountry(
-															clickedMovie.production_countries[0]
-														)}
+														{clickedMovie.production_countries[0] &&
+															`\u00A0\u00A0\u2022\u00A0\u00A0${formatCountry(
+																clickedMovie.production_countries[0]
+															)}`}
 													</span>
 												</YearGenreCountryContainer>
 												<InfoContainer>
@@ -587,13 +590,17 @@ function MovieModal() {
 														<span>
 															{formatRating(clickedMovie?.vote_average) +
 																" " +
-																`(${clickedMovie?.vote_count.toLocaleString()})`}
+																formatVoteCount(clickedMovie?.vote_count)}
 														</span>
 													</div>
 													<MidDot />
 													<span>{formatTime(clickedMovie.runtime || 0)}</span>
 												</InfoContainer>
-												<BigTagline>{clickedMovie.tagline}</BigTagline>
+												<BigTagline>
+													{clickedMovie.tagline
+														? clickedMovie.tagline
+														: clickedMovie.title}
+												</BigTagline>
 											</div>
 											<BigOverview>{clickedMovie.overview}</BigOverview>
 										</BigMovieHeader>
@@ -619,7 +626,10 @@ function MovieModal() {
 											<Divider />
 
 											<BigMovieSectionTitle>
-												Reviews ({reviews && reviews.length})
+												Reviews{" "}
+												{reviews && reviews.length > 0
+													? `(${reviews.length})`
+													: null}
 											</BigMovieSectionTitle>
 											{reviews && (
 												<ReviewSlider
@@ -632,51 +642,56 @@ function MovieModal() {
 												/>
 											)}
 										</BigMovieSection>
-										<BigMovieSection>
-											<Divider />
-											<BigMovieSectionTitle>
-												Recommendations
-											</BigMovieSectionTitle>
-											<RecommendationWrapper>
-												{movieReocmmends &&
-													movieReocmmends.results
-														.slice(0, 6)
-														.map((recommend, index) => (
-															<Recommendation
-																key={index}
-																variants={recommendVariants}
-																whileHover="hover"
-																onClick={() =>
-																	onRecommendClick(recommend.id + "")
-																}
-															>
-																<div>
-																	<img
-																		src={makeImagePath(recommend.poster_path)}
-																	/>
-																</div>
-																<RecommendTitleBlock>
-																	<h1>{recommend.title}</h1>
-																</RecommendTitleBlock>
-																<RecommendationRating>
-																	<span className="material-icons-round">
-																		star
-																	</span>
-																	<span>
-																		{formatRating(recommend.vote_average) +
-																			" " +
-																			`(${recommend.vote_count.toLocaleString()})`}
-																	</span>
-																</RecommendationRating>
-																<span>
-																	{recommend.media_type
-																		? recommend.media_type
-																		: null}
-																</span>
-															</Recommendation>
-														))}
-											</RecommendationWrapper>
-										</BigMovieSection>
+										{movieRecommends?.results &&
+											movieRecommends.results.length > 0 && (
+												<BigMovieSection>
+													<Divider />
+													<BigMovieSectionTitle>
+														Recommendations
+													</BigMovieSectionTitle>
+													<RecommendationWrapper>
+														{movieRecommends &&
+															movieRecommends.results
+																.slice(0, 6)
+																.map((recommend, index) => (
+																	<Recommendation
+																		key={index}
+																		variants={recommendVariants}
+																		whileHover="hover"
+																		onClick={() =>
+																			onRecommendClick(recommend.id + "")
+																		}
+																	>
+																		<div>
+																			<img
+																				src={makeImagePath(
+																					recommend.poster_path
+																				)}
+																			/>
+																		</div>
+																		<RecommendTitleBlock>
+																			<h1>{recommend.title}</h1>
+																		</RecommendTitleBlock>
+																		<RecommendationRating>
+																			<span className="material-icons-round">
+																				star
+																			</span>
+																			<span>
+																				{formatRating(recommend.vote_average) +
+																					" " +
+																					`(${recommend.vote_count.toLocaleString()})`}
+																			</span>
+																		</RecommendationRating>
+																		<span>
+																			{recommend.media_type
+																				? recommend.media_type
+																				: null}
+																		</span>
+																	</Recommendation>
+																))}
+													</RecommendationWrapper>
+												</BigMovieSection>
+											)}
 									</OverViewWrapper>
 								</>
 							)}
