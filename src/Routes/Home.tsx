@@ -1,18 +1,20 @@
 import styled from "styled-components";
 import { useQuery } from "react-query";
 import {
-	getMovies,
-	getMovieDetail,
+	getData,
+	getDetail,
 	getImages,
 	getPopular,
 	getNowPlaying,
+	getTopRated,
+	fetchData,
 } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
-import { IGetImagesResult } from "../Interfaces/API/IGetImages";
+import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
+import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 import { favMovieIDs, favMovieDict } from "../utils/favMovies";
 import {
 	Outlet,
@@ -21,17 +23,16 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { OFF_SET, HERO_ID as HERO_ID, SLIDER_MARGIN } from "../utils/consts";
-import { HeroSlider, Slider } from "../Components/Slider/Slider";
+import {
+	OFF_SET,
+	HERO_ID as HERO_ID,
+	SLIDER_MARGIN,
+	Endpoint,
+} from "../utils/consts";
+import { Slider } from "../Components/Slider/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
-import { useQueryParams } from "../utils/utils";
 import { heroDataParams } from "../utils/dataParams";
-import {
-	nowPlayingDataParams,
-	topRatedDataParams,
-	popularDataParams,
-} from "../utils/dataParams/homeDataParams";
 
 const Container = styled.div`
 	display: flex;
@@ -53,6 +54,8 @@ const Loader = styled.div`
 	height: 20vh;
 `;
 
+// linear-gradient(to top, #000000, 5%, transparent), linear-gradient(to bottom, #0c0c0c, 5%, transparent),
+
 const Hero = styled.div<{ bgPhoto: string }>`
 	display: flex;
 	height: 100vh;
@@ -63,8 +66,21 @@ const Hero = styled.div<{ bgPhoto: string }>`
 	padding: 0 3.5rem;
 	gap: 2rem;
 
-	background-image: linear-gradient(to top, #000000, 5%, transparent),
-		linear-gradient(to bottom, #0c0c0c, 15%, transparent),
+	background-color: #000000;
+	background-image: linear-gradient(
+			to top,
+			transparent 90%,
+			rgba(28, 28, 28, 0.8) 100%
+		),
+		linear-gradient(
+			to bottom,
+			transparent 90%,
+			#0c0c0c 100%,
+			#111 98%,
+			#222 96%,
+			#333 94%,
+			#555 92%
+		),
 		url(${(props) => props.bgPhoto});
 	background-size: cover;
 	box-shadow: 0 0 40px 20px black;
@@ -73,7 +89,7 @@ const Hero = styled.div<{ bgPhoto: string }>`
 //linear-gradient(to right, #000, rgba(0, 0, 0, 0), #000),
 
 const HeroTitleContainer = styled.div`
-	width: 20%;
+	width: 30%;
 `;
 
 const HeroTitle = styled.img`
@@ -101,11 +117,151 @@ function Home() {
 	};
 	const [isDoneLoading, setIsDoneLoading] = useState(false);
 	const { data: heroImage, isLoading: heroImageLoading } =
-		useQuery<IGetImagesResult>(["heroImage", HERO_ID], () =>
-			getImages(HERO_ID)
+		useQuery<IGetMovieImagesResult>(["heroImage", HERO_ID], () =>
+			fetchData(Endpoint.images, "movie", HERO_ID)
 		);
+	const favMovies = favMovieIDs;
+	const { data: favDetails, isLoading: favDetailsloading } = useQuery<
+		IGetMovieDetailResult[]
+	>(["fav", "movie", "details"], async () => {
+		if (!favMovies) {
+			return [];
+		}
+		const promises =
+			favMovies &&
+			favMovies.map((movie) =>
+				fetchData(Endpoint.details, "movie", movie.id, movie.original_language)
+			);
+		return Promise.all(promises);
+	});
+	const { data: favImages, isLoading: favImagesLoading } = useQuery<
+		IGetMovieImagesResult[]
+	>(["fav", "movie", "images"], async () => {
+		if (!favMovies) {
+			return [];
+		}
+		const promises =
+			favMovies &&
+			favMovies.map((movie) =>
+				fetchData(Endpoint.images, "movie", movie.id, movie.original_language)
+			);
+		return Promise.all(promises);
+	});
 
-	const {
+	const { data: popularMovies } = useQuery<IGetResult>(
+		["popular", "movie", "data"],
+		() => fetchData(Endpoint.popular, "movie")
+	);
+	const { data: popularDetails, isLoading: popularDetailsloading } = useQuery<
+		IGetMovieDetailResult[]
+	>(["popular", "movie", "details"], async () => {
+		if (!popularMovies) {
+			return [];
+		}
+		const promises =
+			popularMovies &&
+			popularMovies?.results.map((movie) =>
+				fetchData(Endpoint.details, "movie", movie.id, movie.original_language)
+			);
+		return Promise.all(promises);
+	});
+	const { data: popularImages, isLoading: popularImagesLoading } = useQuery<
+		IGetMovieImagesResult[]
+	>(["popular", "movie", "images"], async () => {
+		if (!popularMovies) {
+			return [];
+		}
+		const promises =
+			popularMovies &&
+			popularMovies?.results.map((movie) =>
+				fetchData(Endpoint.images, "movie", movie.id, movie.original_language)
+			);
+		return Promise.all(promises);
+	});
+
+	const { data: topRatedMovies } = useQuery<IGetResult>(
+		["topRated", "movie", "data"],
+		() => fetchData(Endpoint.topRated, "movie")
+	);
+	const { data: topRatedDetails, isLoading: topRatedDetailsloading } = useQuery<
+		IGetMovieDetailResult[]
+	>(["topRated", "movie", "details"], async () => {
+		if (!topRatedMovies) {
+			return [];
+		}
+		const promises =
+			topRatedMovies &&
+			topRatedMovies?.results.map((movie) =>
+				fetchData(Endpoint.details, "movie", movie.id, movie.original_language)
+			);
+		return Promise.all(promises);
+	});
+	const { data: topRatedImages, isLoading: topRatedImagesLoading } = useQuery<
+		IGetMovieImagesResult[]
+	>(["topRated", "movie", "images"], async () => {
+		if (!topRatedMovies) {
+			return [];
+		}
+		const promises =
+			topRatedMovies &&
+			topRatedMovies?.results.map((movie) =>
+				fetchData(Endpoint.images, "movie", movie.id, movie.original_language)
+			);
+		return Promise.all(promises);
+	});
+
+	const { data: nowPlayingMovies } = useQuery<IGetResult>(
+		["nowPlaying", "movie", "data"],
+		() => fetchData(Endpoint.nowPlaying, "movie")
+	);
+	const { data: nowPlayingDetails, isLoading: nowPlayingDetailsLoading } =
+		useQuery<IGetMovieDetailResult[]>(
+			["nowPlaying", "movie", "details"],
+			async () => {
+				if (!nowPlayingMovies) {
+					return [];
+				}
+				const promises =
+					nowPlayingMovies &&
+					nowPlayingMovies?.results.map((movie) =>
+						fetchData(
+							Endpoint.details,
+							"movie",
+							movie.id,
+							movie.original_language
+						)
+					);
+				return Promise.all(promises);
+			}
+		);
+	const { data: nowPlayingImages, isLoading: nowPlayingImagesLoading } =
+		useQuery<IGetMovieImagesResult[]>(
+			["nowPlaying", "movie", "images"],
+			async () => {
+				if (!nowPlayingMovies) {
+					return [];
+				}
+				const promises =
+					nowPlayingMovies &&
+					nowPlayingMovies?.results.map((movie) =>
+						fetchData(
+							Endpoint.images,
+							"movie",
+							movie.id,
+							movie.original_language
+						)
+					);
+				return Promise.all(promises);
+			}
+		);
+	const isNowPlayingLoading =
+		nowPlayingDetailsLoading || nowPlayingImagesLoading;
+	const isPopularLoading = popularDetailsloading || popularImagesLoading;
+	const isTopRatedLoading = topRatedDetailsloading || topRatedImagesLoading;
+	const isHeroLoading = favDetailsloading || favImagesLoading;
+
+	/*
+		const {
 		images: favImages,
 		details: favDetails,
 		isLoading: isHeroLoading,
@@ -133,6 +289,8 @@ function Home() {
 	} = useQueryParams({
 		...popularDataParams,
 	});
+	
+	*/
 
 	useEffect(() => {
 		setIsDoneLoading(
@@ -151,7 +309,7 @@ function Home() {
 				favDetails && (
 					<>
 						<Hero
-							bgPhoto={makeImagePath(heroImage?.backdrops[0].file_path || "")}
+							bgPhoto={makeImagePath(heroImage?.backdrops[7].file_path || "")}
 							onClick={onHeroClick}
 						>
 							<HeroTitleContainer>
@@ -160,9 +318,13 @@ function Home() {
 								/>
 							</HeroTitleContainer>
 						</Hero>
-						<HeroSlider
-							heroMovieImages={favImages}
-							heroMovieDetails={favDetails}
+
+						<Slider
+							imageData={favImages}
+							detailData={favDetails}
+							wrapperMargin={SLIDER_MARGIN}
+							sliderType="fav"
+							inBigMovie={false}
 						/>
 
 						<>
@@ -173,6 +335,7 @@ function Home() {
 										imageData={popularImages}
 										detailData={popularDetails}
 										sliderType="popular"
+										inBigMovie={false}
 									/>
 								)}
 							</Section>
@@ -183,6 +346,7 @@ function Home() {
 										imageData={nowPlayingImages}
 										detailData={nowPlayingDetails}
 										sliderType="nowPlaying"
+										inBigMovie={false}
 									/>
 								)}
 							</Section>
@@ -193,6 +357,7 @@ function Home() {
 										imageData={topRatedImages}
 										detailData={topRatedDetails}
 										sliderType="topRated"
+										inBigMovie={false}
 									/>
 								)}
 							</Section>

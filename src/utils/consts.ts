@@ -1,35 +1,33 @@
 import { type } from "os";
 
 export const OFF_SET = 6;
-export const HERO_ID = 324857; //569094 324857
+export const HERO_ID = 313369; //569094 324857 843 198375 120467  475557 122906  313369
+export const HERO_TV_ID = 110382; // 112486 110382 75820
 export const SLIDER_MARGIN = -window.innerHeight * 0.05;
 export const NETFLIX_LOGO_URL =
 	"https://assets.brand.microsites.netflix.io/assets/2800a67c-4252-11ec-a9ce-066b49664af6_cm_800w.jpg?v=4";
 
-interface ENDPOINT_DICT_PARAMS {
-	endpoint: string;
-	requiresId: boolean;
+export enum Endpoint {
+	topRated = "/top_rated",
+	popular = "/popular",
+	nowPlaying = "/now_playing",
+	onAir = "/on_the_air",
+	airingToday = "/airing_today",
+
+	recommends = "/recommendations",
+	videos = "/videos",
+	images = "/images",
+	credits = "/credits",
+	details = "",
+	reviews = "/reviews",
 }
 
-interface IENDPOINT_DICT {
-	[key: string]: ENDPOINT_DICT_PARAMS;
-}
-
-export const ENDPOINT_DICT: IENDPOINT_DICT = {
-	topRated: { endpoint: "top_rated", requiresId: false },
-	popular: { endpoint: "popular", requiresId: false },
-	nowPlaying: { endpoint: "now_playing", requiresId: false },
-	onAir: { endpoint: "on_the_air", requiresId: false },
-	recommends: { endpoint: "{media_id}/recommendations", requiresId: true },
-	videos: { endpoint: "{media_id}/videos", requiresId: true },
-	images: { endpoint: "{media_id}/images", requiresId: true },
-	credits: { endpoint: "{media_id}/credits", requiresId: true },
-	details: { endpoint: "{media_id}", requiresId: true },
-	reviews: { endpoint: "{media_id}/reviews", requiresId: true },
-};
-
-export const ENDPOINT_KEYS: Record<string, string> = {};
-
-for (const key in ENDPOINT_DICT) {
-	ENDPOINT_KEYS[key] = key;
+export enum TvGenreIds {
+	drama = 18,
+	reality = 10764,
+	animation = 16,
+	scifi_fantasy = 10765,
+	action_adventure = 10759,
+	mystery = 9648,
+	talk = 10767,
 }

@@ -1,11 +1,12 @@
 import { useQuery, QueryOptions } from "react-query";
-import { fetchData, getImages, getMovieDetail } from "../api";
-import { ENDPOINT_DICT } from "./consts";
+import { fetchData, getImages, getDetail } from "../api";
 import { favMovieIDs, IFavMovieIDs } from "./favMovies";
 import { IGetResult } from "../Interfaces/API/IGetResults";
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
-import { IGetImagesResult } from "../Interfaces/API/IGetImages";
+import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
+import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
+import { IGetTvDetails } from "../Interfaces/API/IGetDetails/IGetTvDetails";
 import { useEffect } from "react";
+import { BASE_PATH, API_KEY } from "../api";
 
 export interface IQueryParams {
 	endpoint: string;
@@ -19,6 +20,7 @@ A function for fetching different movie/tv data such as popular, top_rated, etc.
 `defaultData`, if exists, would be a list containing my favorite movies' titles and IDs
 */
 
+/* 
 const SelectData = ({
 	endpoint,
 	identifier,
@@ -54,29 +56,45 @@ export const useQueryParams = ({
 		existsDefaultData,
 		mediaType,
 	});
+	console.log("movies", movies);
 
 	//Fetching results for a selected endpoint such as popular, top_rated, now_playing, etc
 
 	const { data: details, isLoading: detailsLoading } = useQuery<
 		IGetMovieDetailResult[]
-	>([endpoint, identifier, "details"], async () => {
+	>([endpoint, identifier, mediaType, "details"], async () => {
 		if (!movies) {
 			return [];
 		}
-		const promises = movies.map((movie) => getMovieDetail(movie.id));
+		const promises = movies.map((movie) =>
+			getDetail(movie.id, movie.original_language)
+		);
 		return Promise.all(promises);
 	});
 
 	const { data: images, isLoading: imagesLoading } = useQuery<
-		IGetImagesResult[]
-	>([endpoint, identifier, "images"], async () => {
+		IGetMovieImagesResult[]
+	>([endpoint, identifier, mediaType, "images"], async () => {
 		if (!movies) {
 			return [];
 		}
-		const promises = movies.map((movie) => getImages(movie.id));
+		const promises = movies.map((movie) =>
+			fetchData("images", mediaType, movie.id)
+		);
+
 		return Promise.all(promises);
 	});
-
+	const { data: imagesTmp, isLoading: imagesTmpLoading } = useQuery<
+		IGetMovieImagesResult[]
+	>([endpoint, identifier, mediaType, "images"], async () => {
+		if (!movies) {
+			return [];
+		}
+		const promises = movies.map((movie) =>
+			getImages(movie.id, movie.original_language)
+		);
+		return Promise.all(promises);
+	});
 	return {
 		movies,
 		details,
@@ -84,3 +102,6 @@ export const useQueryParams = ({
 		isLoading: moviesLoading || detailsLoading || imagesLoading,
 	};
 };
+
+
+*/

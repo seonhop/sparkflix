@@ -1,33 +1,29 @@
-import { IGetImagesResult } from "../API/IGetImages";
-import { IGetMovieDetailResult } from "../API/IGetMovieDetail";
+import { IGetMovieImagesResult } from "../API/IGetImages";
+import { IGetMovieDetailResult } from "../API/IGetDetails/IGetMovieDetail";
 import { IGetCredits } from "../API/IGetCredits";
 import { IGetResult } from "../API/IGetResults";
 export type ISliderBtnPos = "left" | "right";
+import { Cast } from "../API/IGetCredits";
+import { ReviewResults } from "../API/IGetReviews";
 
 export interface IHeroSlider {
-	heroMovieImages: IGetImagesResult[];
+	heroMovieImages: IGetMovieImagesResult[];
 	heroMovieDetails: IGetMovieDetailResult[];
 }
 
 export interface ISlider {
-	imageData: IGetImagesResult[] | undefined;
-	detailData: IGetMovieDetailResult[];
+	forCast?: { data: Cast[]; movieId: string };
+	forReview?: { data: ReviewResults[]; movieId: string };
+	imageData?: IGetMovieImagesResult[] | undefined;
+	detailData?: IGetMovieDetailResult[];
 	wrapperMargin?: number;
 	sliderType: string;
+	inBigMovie: boolean;
+	offset?: number;
 }
 
 export interface IPopularSlider {
-	imageData: IGetImagesResult[] | undefined;
+	imageData: IGetMovieImagesResult[] | undefined;
 	detailData: IGetResult;
 	wrapperMargin?: number;
 }
-
-interface DetailData extends IGetMovieDetailResult {
-	dataType: "movieDetail";
-}
-
-interface PopularData extends IGetResult {
-	dataType: "popular";
-}
-
-type DetailOrPopularData = DetailData | PopularData;

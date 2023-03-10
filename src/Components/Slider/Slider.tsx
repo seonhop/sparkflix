@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import SliderButton from "./SliderBtn";
+import { SliderButton } from "./SliderBtn";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { IGetImagesResult } from "../../Interfaces/API/IGetImages";
+import { IGetMovieImagesResult } from "../../Interfaces/API/IGetImages";
 import { Cast } from "../../Interfaces/API/IGetCredits";
 import {
 	formatTime,
@@ -21,7 +21,8 @@ import {
 	IHeroSlider,
 	ISlider,
 } from "../../Interfaces/Components/ISlider";
-import { IGetMovieDetailResult } from "../../Interfaces/API/IGetMovieDetail";
+import { IGetMovieDetailResult } from "../../Interfaces/API/IGetDetails/IGetMovieDetail";
+
 import React from "react";
 import { useQuery } from "react-query";
 import { IGetVideosResult } from "../../Interfaces/API/IGetVideos";
@@ -29,6 +30,10 @@ import { getVideos } from "../../api";
 import { MidDot } from "../MidDot";
 import { Genres } from "../Genres";
 import { ReviewResults } from "../../Interfaces/API/IGetReviews";
+import { dir } from "console";
+import { MovieTvBox } from "./MovieTvBox";
+import { SliderPages } from "./SliderPages";
+import { CastContainer, MovieTvContainer } from "./SliderContainers";
 
 const SliderWrapper = styled.div<{ margin?: number }>`
 	position: relative;
@@ -634,6 +639,7 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 	const totalCast = cast.length;
 	const offset = 4;
 	const maxIndex = Math.floor(totalCast / offset) - 1;
+
 	useEffect(() => {
 		if (maxIndex === 0) {
 			setArePages(false);
@@ -740,59 +746,63 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 	);
 }
 
-interface IMovieLogoPosProps {
-	title: string;
-	id: number;
-	pos: (number | string)[];
-	transform: (number | string)[];
-	logoWidth: string;
-}
-
 export function Slider({
 	imageData,
 	detailData,
 	wrapperMargin,
 	sliderType,
+	inBigMovie,
+	forCast,
+	forReview,
+	offset,
 }: ISlider) {
 	const navigate = useNavigate();
 	const [dirRight, setDirRight] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [leaving, setLeaving] = useState(false);
-	const [isHovered, setIsHoverd] = useState("");
-	const [isMyComponentVisible, setIsMyComponentVisible] = useState(false);
-	const [isHoveredMap, setIsHoveredMap] = useState<{ [key: string]: boolean }>(
-		{}
-	);
 	const [hoveredIndex, setHoveredIndex] = useState(-1);
+	const data = detailData
+		? detailData
+		: forCast
+		? forCast.data
+		: forReview?.data || [];
+	const sliderOffset = offset ? offset : OFF_SET;
+	const [arePages, setArePages] = useState(true);
+
+	useEffect(() => {
+		if (maxIndex === 0) {
+			setArePages(false);
+		}
+	}, [arePages]);
 
 	const handleBoxIndexHover = (index: number) => {
 		setHoveredIndex(index);
 	};
-
-	// function to handle box hover events
-	const handleBoxHover = (movieId: number, isHovered: boolean) => {
-		setIsHoveredMap((prevMap) => ({ ...prevMap, [movieId]: isHovered }));
-	};
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
-
 	const onExpandClicked = (movieId: string) => {
 		navigate(`/movies/${movieId}`);
 	};
-	const totalMovies = detailData.length;
-	const maxIndex = Math.floor(totalMovies / OFF_SET) - 1;
+	console.log(index);
+
+	const totalData = data.length;
+	const maxIndex = detailData
+		? Math.floor(totalData / sliderOffset) - 1
+		: Math.ceil(totalData / sliderOffset) - 1;
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
-		if (imageData) {
+		if (imageData || forCast || forReview) {
 			if (leaving) return;
 			toggleLeaving();
 
 			if (sliderBtnPos === "left") {
 				setIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
 				setDirRight(false);
+				console.log(index, dirRight);
 			} else {
 				setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
 				setDirRight(true);
+				console.log(index, dirRight);
 			}
 		}
 	};
@@ -805,241 +815,41 @@ export function Slider({
 					onExitComplete={toggleLeaving}
 					custom={dirRight}
 				>
-					<MovieSliderContainer
-						variants={movieSliderContainerVariants}
-						initial="hidden"
-						animate="visible"
-						whileHover="hover"
-						exit="exit"
-						key={index}
-						transition={{ type: "tween", duration: 1 }}
-						custom={dirRight}
-					>
-						{detailData &&
-							detailData
-								?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
-								.map((movie) => (
-									<Box
-										variants={boxVariants}
-										initial="normal"
-										whileHover="hover"
-										exit="exit"
-										transition={{ type: "tween" }}
-										key={movie.id}
-										layoutId={movie.id + "" + sliderType}
-										onMouseEnter={() => handleBoxIndexHover(movie.id)}
-										onMouseLeave={() => handleBoxIndexHover(-1)}
-									>
-										<BoxImgContainer
-											pos={["none", "none", 0, 0]}
-											transform={["2vh", "-2vh"]}
-											logowidth={"35%"}
-										>
-											<img
-												src={makeImagePath(
-													movie.backdrop_path || movie.poster_path,
-													"w500"
-												)}
-											/>
-											{imageData?.find((obj) => obj.id === movie.id)
-												?.logos[0] ? (
-												<img
-													src={makeImagePath(
-														imageData.find((obj) => obj.id === movie.id)
-															?.logos[0].file_path,
-														"w500"
-													)}
-												/>
-											) : (
-												<h2>{movie.title}</h2>
-											)}
-										</BoxImgContainer>
-										<AnimatePresence initial={false}>
-											<InfoPopup
-												isHovered={hoveredIndex === movie.id}
-												movie={movie}
-												onExpandClicked={onExpandClicked}
-											/>
-										</AnimatePresence>
-									</Box>
-								))}
-						<SliderButton manipulateIndex = {() => manipulateIndex("left", maxIndex)} maxIndex = {maxIndex} >
-							variants={sliderBtnVariants}
-							transition={{ type: "tween" }}
-							pos="left"
-							onClick={() => manipulateIndex("left", maxIndex)}
+					{detailData && (
+						<MovieSliderContainer
+							variants={movieSliderContainerVariants}
+							initial="hidden"
+							animate="visible"
+							whileHover="hover"
+							exit="exit"
+							key={index}
+							transition={{ type: "tween", duration: 1 }}
+							custom={dirRight}
 						>
-							<SliderBtnIcon className="material-icons">
-								arrow_back_ios
-							</SliderBtnIcon>
-						</SliderButton>
-						<SliderBtn
-							variants={sliderBtnVariants}
-							transition={{ type: "tween" }}
-							pos="right"
-							onClick={() => manipulateIndex("right", maxIndex)}
-						>
-							<SliderBtnIcon className="material-icons">
-								arrow_forward_ios
-							</SliderBtnIcon>
-						</SliderBtn>
-						<Pagination
-							maxindex={maxIndex}
-							currindex={index}
-							margin={SLIDER_MARGIN}
-							variants={paginationVariants}
-						>
-							{Array(maxIndex + 1)
-								.fill(null)
-								.map((_, index) => (
-									<div key={index}></div>
-								))}
-						</Pagination>
-					</MovieSliderContainer>
-				</AnimatePresence>
-			</SliderWrapper>
-		</>
-	);
-}
-
-export function HeroSlider({ heroMovieImages, heroMovieDetails }: IHeroSlider) {
-	const navigate = useNavigate();
-	const [dirRight, setDirRight] = useState(true);
-	const [index, setIndex] = useState(0);
-	const [leaving, setLeaving] = useState(false);
-	const [isMovieHovered, setIsMovieHovered] = useState(false);
-	const handleMouseEnter = () => {
-		setIsMovieHovered(true);
-	};
-
-	const handleMouseLeave = () => {
-		setIsMovieHovered(false);
-	};
-	const toggleLeaving = () => {
-		setLeaving((prev) => !prev);
-	};
-	const totalMovies = favMovieIDs.length;
-	const maxIndex = Math.floor(totalMovies / OFF_SET) - 1;
-	const manipulateIndex = (sliderBtnPos: ISliderBtnPos) => {
-		if (heroMovieImages) {
-			if (leaving) return;
-			toggleLeaving();
-
-			if (sliderBtnPos === "left") {
-				setIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
-				setDirRight(false);
-			} else {
-				setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
-				setDirRight(true);
-			}
-		}
-	};
-	const { data: heroMovieVideos, isLoading: heroVideosLoading } = useQuery<
-		IGetVideosResult[]
-	>(["heroMovieVideos", favMovieIDs], async () => {
-		const promises = heroMovieDetails.map((movie) => getVideos(movie.id));
-		return Promise.all(promises);
-	});
-
-	const onExpandClicked = (movieId: string) => {
-		navigate(`/movies/${movieId}`);
-	};
-
-	return (
-		<>
-			<SliderWrapper margin={SLIDER_MARGIN}>
-				<AnimatePresence
-					initial={false}
-					onExitComplete={toggleLeaving}
-					custom={dirRight}
-				>
-					<MovieSliderContainer
-						variants={movieSliderContainerVariants}
-						initial="hidden"
-						animate="visible"
-						whileHover="hover"
-						exit="exit"
-						key={index}
-						transition={{ type: "tween", duration: 1 }}
-						custom={dirRight}
-					>
-						{heroMovieDetails
-							?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
-							.map((movie) => (
-								<Box
-									variants={boxVariants}
-									initial="normal"
-									whileHover="hover"
-									transition={{ type: "tween" }}
-									key={movie.id}
-									layoutId={movie.id + ""}
-								>
-									<BoxImgContainer
-										pos={favMovieDict[String(movie.id)].pos}
-										transform={favMovieDict[String(movie.id)].transform}
-										logowidth={favMovieDict[String(movie.id)].logoWidth}
-									>
-										<img
-											src={makeImagePath(
-												movie.backdrop_path || movie.poster_path,
-												"w500"
-											)}
+							{detailData &&
+								detailData
+									?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
+									.map((movie) => (
+										<MovieTvBox
+											key={movie.id}
+											handleBoxIndexHover={handleBoxIndexHover}
+											movie={movie}
+											imageData={imageData}
+											sliderType={sliderType}
+											hoveredIndex={hoveredIndex}
+											onExpandClicked={onExpandClicked}
 										/>
-										{heroMovieImages.find((obj) => obj.id === movie.id)
-											?.logos[0].file_path ? (
-											<img
-												src={makeImagePath(
-													heroMovieImages.find((obj) => obj.id === movie.id)
-														?.logos[0].file_path || "",
-													"w500"
-												)}
-											/>
-										) : (
-											<h1>{favMovieDict[String(movie.id)].title}</h1>
-										)}
-									</BoxImgContainer>
-									<InfoPopup
-										isHovered={true}
-										movie={movie}
-										onExpandClicked={onExpandClicked}
-									/>
-								</Box>
-							))}
-						<SliderBtn
-							variants={sliderBtnVariants}
-							transition={{ type: "tween" }}
-							pos="left"
-							onClick={() => manipulateIndex("left")}
-						>
-							<SliderBtnIcon className="material-icons">
-								arrow_back_ios
-							</SliderBtnIcon>
-						</SliderBtn>
-						<SliderBtn
-							variants={sliderBtnVariants}
-							transition={{ type: "tween" }}
-							pos="right"
-							onClick={() => manipulateIndex("right")}
-						>
-							<SliderBtnIcon className="material-icons">
-								arrow_forward_ios
-							</SliderBtnIcon>
-						</SliderBtn>
-						<Pagination
-							maxindex={maxIndex}
-							currindex={index}
-							margin={SLIDER_MARGIN}
-							variants={paginationVariants}
-						>
-							{Array(maxIndex + 1)
-								.fill(null)
-								.map((_, index) => (
-									<div key={index}></div>
-								))}
-						</Pagination>
-					</MovieSliderContainer>
+									))}
+							<SliderButton
+								manipulateIndex={manipulateIndex}
+								maxIndex={maxIndex}
+								dirRight={dirRight}
+								inBigMovie={inBigMovie}
+							/>
+							<SliderPages maxIndex={maxIndex} index={index} />
+						</MovieSliderContainer>
+					)}
 				</AnimatePresence>
-				<AnimatePresence></AnimatePresence>
 			</SliderWrapper>
 		</>
 	);

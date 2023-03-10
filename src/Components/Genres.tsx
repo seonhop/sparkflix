@@ -1,4 +1,4 @@
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
+import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 import { formatGenres } from "../utils/format";
 import React from "react";
 import { MidDot } from "./MidDot";

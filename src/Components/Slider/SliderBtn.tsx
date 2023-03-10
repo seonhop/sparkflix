@@ -19,7 +19,7 @@ const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
 	}
 `;
 
-const SliderBtnBigMovie = styled(SliderBtn)`
+export const SliderBtnBigMovie = styled(SliderBtn)`
 	top: 15%;
 `;
 
@@ -40,14 +40,17 @@ const sliderBtnVariants = {
 
 const SliderBtnIcon = styled(motion.span)``;
 
-interface ISliderBtnProps {
+export interface ISliderBtnProps {
 	manipulateIndex: (sliderBtnPos: ISliderBtnPos, maxIndex: number) => void;
 	maxIndex: number;
+	dirRight: boolean;
+	inBigMovie: boolean;
 }
 
-export default function SliderButton({
+export function SliderButton({
 	manipulateIndex,
 	maxIndex,
+	inBigMovie,
 }: ISliderBtnProps) {
 	return (
 		<>
@@ -56,6 +59,7 @@ export default function SliderButton({
 				transition={{ type: "tween" }}
 				pos="left"
 				onClick={() => manipulateIndex("left", maxIndex)}
+				style={{ top: inBigMovie ? "15%" : "0" }}
 			>
 				<SliderBtnIcon className="material-icons">arrow_back_ios</SliderBtnIcon>
 			</SliderBtn>

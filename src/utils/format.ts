@@ -1,4 +1,4 @@
-import { ProductionCountry } from "../Interfaces/API/IGetMovieDetail";
+import { ProductionCountry } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 
 export function formatTime(totalMinutes: number) {
 	const hours = Math.floor(totalMinutes / 60);

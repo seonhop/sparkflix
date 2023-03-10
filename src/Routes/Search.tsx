@@ -1,11 +1,11 @@
 import { useLocation } from "react-router-dom";
-import { getSearchResults, getImages, getMovieDetail } from "../api";
+import { getSearchResults, getImages, getDetail } from "../api";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import { IGetSearchResults } from "../Interfaces/API/IGetSearchResults";
-import { IGetImagesResult } from "../Interfaces/API/IGetImages";
+import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetMovieDetail";
+import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 
 const SearchContainer = styled.div`
 	display: flex;
@@ -51,7 +51,9 @@ function Search() {
 		async () => {
 			const movies = data?.results.filter((movie) => movie.id) ?? [];
 			console.log("movies..., ", movies);
-			const promises = movies.map((movie) => getMovieDetail(movie.id));
+			const promises = movies.map((movie) =>
+				getDetail(movie.id, movie.original_language)
+			);
 			console.log("logging...", promises);
 			const images = await Promise.all(promises);
 			return images.flat();

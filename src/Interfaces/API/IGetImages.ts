@@ -1,11 +1,11 @@
-export interface IGetImagesResult {
+export interface IGetMovieImagesResult {
 	backdrops: Backdrop[];
 	id: number;
 	logos: Backdrop[];
 	posters: Backdrop[];
 }
 
-export interface Backdrop {
+interface Backdrop {
 	aspect_ratio: number;
 	height: number;
 	iso_639_1: ISO639_1;

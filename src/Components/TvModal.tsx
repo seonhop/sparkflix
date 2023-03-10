@@ -491,7 +491,7 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 	return recommend.hasOwnProperty("name");
 }
 
-function MovieModal() {
+function TvModal() {
 	const navigate = useNavigate();
 	const onRecommendClick = (movieId: string) => navigate(`/movies/${movieId}`);
 	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
@@ -744,7 +744,7 @@ function MovieModal() {
 	);
 }
 
-export default MovieModal;
+export default TvModal;
 
 /*
 

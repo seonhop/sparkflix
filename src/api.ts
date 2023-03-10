@@ -1,127 +1,129 @@
-const API_KEY = "3a80f7f28c20df567800b2cbc5e55a54";
-const BASE_PATH = "https://api.themoviedb.org/3";
+export const API_KEY = "3a80f7f28c20df567800b2cbc5e55a54";
+export const BASE_PATH = "https://api.themoviedb.org/3";
 
 export function fetchData(
 	endpoint: string,
 	mediaType: "movie" | "tv",
-	movieId?: number,
-	query?: string
+	id?: number,
+	originalLanguage?: string,
+	genre?: string,
+	originalCountry?: string
 ) {
-	let url = `${BASE_PATH}/${mediaType}/${endpoint}`;
+	let url = `${BASE_PATH}/${mediaType}`;
+	let language = "en";
+	let country = "en";
 
-	if (movieId) {
-		url = url.replace("{movie_id}", movieId.toString());
+	if (id) {
+		url += `/${id}`;
+	}
+	if (originalLanguage) {
+		language = originalLanguage;
+	}
+	if (originalCountry) {
+		country = originalCountry;
 	}
 
-	const params = new URLSearchParams({
-		api_key: API_KEY,
-		language: "en-US",
-		query: query || "",
-	});
+	url += `${endpoint}?api_key=${API_KEY}&language=en`;
+	if (endpoint === "/images") {
+		url += `&include_image_language=en,null`;
+	}
+	if (mediaType === "tv" && !id) {
+		url += `&with_original_language=${country}`;
+	}
+	if (genre) {
+		url += `&with_genres=${genre}`;
+	}
 
-	url += `?${params.toString()}`;
-
+	console.log("hero", url);
 	return fetch(url).then((response) => response.json());
 }
 
-/*
-fetchData('movie/top_rated').then((response) => {
-  // Handle response
-});
-
-fetchData('movie/popular').then((response) => {
-  // Handle response
-});
-
-fetchData('movie/top_rated').then((response) => {
-  // Handle response
-});
-
-fetchData(`movie/${movie_id}/recommendations`, movie_id).then((response) => {
-  // Handle response
-});
-
-fetchData(`movie/${movie_id}/videos`, movie_id).then((response) => {
-  // Handle response
-});
-
-fetchData(`movie/${movie_id}/images`, movie_id).then((response) => {
-  // Handle response
-});
-
-fetchData(`movie/${movie_id}/credits`, movie_id).then((response) => {
-  // Handle response
-});
-
-fetchData(`movie/${movie_id}`, movie_id).then((response) => {
-  // Handle response
-});
-
-fetchData('search/multi', null, 'Harry Potter').then((response) => {
-  // Handle response
-});
-
-
-*/
-
-export function getMovies() {
+export function getData(mediaType?: string) {
 	return fetch(
 		`${BASE_PATH}/movie/top_rated?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getPopular() {
+export function getPopular(mediaType?: string) {
 	return fetch(
 		`${BASE_PATH}/movie/popular?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getTopRated() {
+export function getTopRated(mediaType?: string) {
 	return fetch(
-		`${BASE_PATH}/movie/popular?api_key=${API_KEY}&language=en-US`
+		`${BASE_PATH}/movie/top_rated?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
+//clear
 export function getNowPlaying() {
 	return fetch(
 		`${BASE_PATH}/movie/now_playing?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getRecommends(movie_id: number) {
+//clear
+export function getAiringToday() {
 	return fetch(
-		`${BASE_PATH}/movie/${movie_id}/recommendations?api_key=${API_KEY}&language=en-US`
+		`${BASE_PATH}/tv/airing_today?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getVideos(movie_id: number) {
+//clear
+export function getOnTheAir() {
 	return fetch(
-		`${BASE_PATH}/movie/${movie_id}/videos?api_key=${API_KEY}&language=en-US`
+		`${BASE_PATH}/tv/on_the_air?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getImages(movie_id: number) {
+//clear
+export function getRecommends(id: number, mediaType?: string) {
 	return fetch(
-		`${BASE_PATH}/movie/${movie_id}/images?api_key=${API_KEY}&language=en&include_image_language=en,null`
+		`${BASE_PATH}/movie/${id}/recommendations?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getCredits(movie_id: number) {
+export function getVideos(id: number, mediaType?: string) {
 	return fetch(
-		`${BASE_PATH}/movie/${movie_id}/credits?api_key=${API_KEY}&language=en-US`
+		`${BASE_PATH}/movie/${id}/videos?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
 }
 
-export function getReviews(movie_id: number) {
+//clear
+export function getImages(
+	id: number,
+	original_language: string,
+	mediaType?: string
+) {
 	return fetch(
-		`${BASE_PATH}/movie/${movie_id}/reviews?api_key=${API_KEY}&language=en-US`
+		`${BASE_PATH}/movie/${id}/images?api_key=${API_KEY}&language=${original_language}&include_image_language=null,${original_language}`
 	).then((response) => response.json());
 }
 
-export function getMovieDetail(movie_id: number) {
+//clear
+export function getCredits(id: number, mediaType?: string) {
 	return fetch(
-		`${BASE_PATH}/movie/${movie_id}?api_key=${API_KEY}&language=en`
+		`${BASE_PATH}/movie/${id}/credits?api_key=${API_KEY}&language=en-US`
 	).then((response) => response.json());
+}
+
+//clear
+export function getReviews(id: number, mediaType?: string) {
+	return fetch(
+		`${BASE_PATH}/movie/${id}/reviews?api_key=${API_KEY}&language=en-US`
+	).then((response) => response.json());
+}
+
+//clear
+export function getDetail(
+	id: number,
+	original_language: string,
+	mediaType?: string
+) {
+	const url = `${BASE_PATH}/movie/${id}?api_key=${API_KEY}&language=${original_language}`;
+	console.log("detail", url);
+	return fetch(url).then((response) => response.json());
 }
 
 export function getSearchResults(query: string) {

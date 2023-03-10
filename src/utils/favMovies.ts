@@ -9,6 +9,7 @@ interface IFavMovie {
 export interface IFavMovieIDs {
 	title: string;
 	id: number;
+	original_language: string;
 }
 
 /* {
@@ -259,138 +260,167 @@ export const favMovieDict: IFavDict = {
 
 export const favMovieIDs: IFavMovieIDs[] = [
 	{
-		title: "Baby Driver",
-		id: 339403,
-	},
-
-	{
-		title: "Her",
-		id: 152601,
-	},
-
-	{
-		title: "The Incredibles",
-		id: 9806,
-	},
-
-	{
-		title: "The Grand Budapest Hotel",
-		id: 120467,
-	},
-	{
-		title: "Everything Everywhere All at Once",
-		id: 545611,
-	},
-	{
-		title: "Coco",
-		id: 354912,
-	},
-
-	{
-		title: "(500) Days of Summer",
-		id: 19913,
-	},
-
-	{
-		title: "Big Fish",
-		id: 587,
-	},
-	{
-		title: "Life of Pi",
-		id: 87827,
-	},
-	{
-		title: "Kill Bill: Vol. 1",
-		id: 24,
-	},
-	{
-		title: "The Godfather",
-		id: 238,
-	},
-	{
-		title: "3 Idiots",
-		id: 361743,
-	},
-
-	{
 		title: "Lady Bird",
 		id: 391713,
+		original_language: "en",
 	},
 	{
 		title: "Titanic", //Mood Indigo
 		id: 597,
+		original_language: "en",
 	},
 	{
 		title: "Eternal Sunshine of the Spotless Mind",
 		id: 38,
+		original_language: "en",
 	},
 	{
 		title: "Scarface",
 		id: 274,
+		original_language: "en",
 	},
 	{
 		title: "Top Gun",
 		id: 744,
+		original_language: "en",
 	},
 
 	{
 		title: "The Usual Suspects",
 		id: 629,
+		original_language: "en",
 	},
 	{
-		title: "The Shawshank Redemption",
-		id: 278,
+		title: "Her",
+		id: 152601,
+		original_language: "en",
+	},
+	{
+		title: "In the Mood for Love",
+		id: 843,
+		original_language: "cn",
 	},
 
 	{
-		title: "Howl's Moving Castle",
-		id: 4935,
+		title: "The Incredibles",
+		id: 9806,
+		original_language: "en",
+	},
+
+	{
+		title: "The Grand Budapest Hotel",
+		id: 120467,
+		original_language: "en",
+	},
+	{
+		title: "Everything Everywhere All at Once",
+		id: 545611,
+		original_language: "en",
+	},
+	{
+		title: "Coco",
+		id: 354912,
+		original_language: "en",
+	},
+
+	{
+		title: "(500) Days of Summer",
+		id: 19913,
+		original_language: "en",
+	},
+
+	{
+		title: "Big Fish",
+		id: 587,
+		original_language: "en",
+	},
+	{
+		title: "Life of Pi",
+		id: 87827,
+		original_language: "en",
+	},
+	{
+		title: "Kill Bill: Vol. 1",
+		id: 24,
+		original_language: "en",
+	},
+	{
+		title: "The Godfather",
+		id: 238,
+		original_language: "en",
+	},
+	{
+		title: "3 Idiots",
+		id: 361743,
+		original_language: "en",
+	},
+
+	{
+		title: "The Shawshank Redemption",
+		id: 278,
+		original_language: "en",
+	},
+
+	{
+		title: "Loving Vincent",
+		id: 339877,
+		original_language: "en",
 	},
 
 	{
 		title: "Up",
 		id: 14160,
+		original_language: "en",
 	},
 
 	{
 		title: "Call Me by Your Name",
 		id: 398818,
+		original_language: "en",
 	},
 	{
 		title: "The Lion King",
 		id: 8587,
+		original_language: "en",
 	},
 
 	{
 		title: "A Clockwork Orange",
 		id: 185,
+		original_language: "en",
 	},
 	{
 		title: "About Time",
 		id: 122906,
+		original_language: "en",
 	},
 	{
 		title: "Birdman or (The Unexpected Virtue of Ignorance)",
 		id: 194662,
+		original_language: "en",
 	}, //13
 
 	{
 		title: "Whiplash",
 		id: 244786,
+		original_language: "en",
 	},
 
 	{
 		title: "Django Unchained",
 		id: 68718,
+		original_language: "en",
 	},
 
 	{
 		title: "No Country for Old Men",
 		id: 6977,
+		original_language: "en",
 	},
 	{
 		title: "The Pianist",
 		id: 423,
+		original_language: "en",
 	},
 
 	/* {
@@ -418,5 +448,19 @@ export const favMovieIDs: IFavMovieIDs[] = [
 	{
 		title: "Parasite",
 		id: 496243,
-	}, */
+	},
+	{
+		title: "The Fall",
+		id: 14784
+	},
+	{
+		title: "The Garden of Words",
+		id: 198375
+	},
+	{
+		title: "La La Land",
+		id: 313369
+	}
+	
+	*/
 ];

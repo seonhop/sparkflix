@@ -1,5 +1,5 @@
-import { IGetImagesResult } from "../API/IGetImages";
+import { IGetMovieImagesResult } from "../API/IGetImages";
 
 export interface IMovieModal {
-	movieImages: IGetImagesResult[];
+	movieImages: IGetMovieImagesResult[];
 }
