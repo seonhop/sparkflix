@@ -37,7 +37,9 @@ export function formatGenres(
 		const genreList: string[] = genres.map((item) =>
 			item.name === "Science Fiction" ? "SF" : item.name
 		);
-		return genreList.slice(0, 3).join(format);
+		return genreList.slice(0, 3).join(format).length < 20
+			? genreList.slice(0, 3).join(format)
+			: genreList.slice(0, 2).join(format);
 	}
 	return null;
 }

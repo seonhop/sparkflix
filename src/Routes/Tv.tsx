@@ -14,7 +14,7 @@ import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
+import { IGetTvDetailResult } from "../Interfaces/API/IGetDetails/IGetTvDetails";
 import { favMovieIDs, favMovieDict } from "../utils/favMovies";
 import {
 	Outlet,
@@ -121,7 +121,7 @@ function Tv() {
 			fetchData(Endpoint.popular, "tv", undefined, undefined, undefined, "ko")
 	);
 	const { data: favDetails, isLoading: favDetailsloading } = useQuery<
-		IGetMovieDetailResult[]
+		IGetTvDetailResult[]
 	>(["fav", "tv", "details"], async () => {
 		if (!favMovies) {
 			return [];
@@ -152,7 +152,7 @@ function Tv() {
 		() => fetchData(Endpoint.popular, "tv")
 	);
 	const { data: popularDetails, isLoading: popularDetailsloading } = useQuery<
-		IGetMovieDetailResult[]
+		IGetTvDetailResult[]
 	>(["popular", "tv", "details"], async () => {
 		if (!popularMovies) {
 			return [];
@@ -183,7 +183,7 @@ function Tv() {
 		() => fetchData(Endpoint.topRated, "tv")
 	);
 	const { data: topRatedDetails, isLoading: topRatedDetailsloading } = useQuery<
-		IGetMovieDetailResult[]
+		IGetTvDetailResult[]
 	>(["topRated", "tv", "details"], async () => {
 		if (!topRatedMovies) {
 			return [];
@@ -214,7 +214,7 @@ function Tv() {
 		() => fetchData(Endpoint.airingToday, "tv")
 	);
 	const { data: nowPlayingDetails, isLoading: nowPlayingDetailsLoading } =
-		useQuery<IGetMovieDetailResult[]>(
+		useQuery<IGetTvDetailResult[]>(
 			["nowPlaying", "tv", "details"],
 			async () => {
 				if (!nowPlayingMovies) {
@@ -314,6 +314,7 @@ function Tv() {
 							wrapperMargin={SLIDER_MARGIN}
 							sliderType="fav"
 							inBigMovie={false}
+							mediaType="tv"
 						/>
 
 						<>
@@ -325,6 +326,7 @@ function Tv() {
 										detailData={popularDetails}
 										sliderType="popular"
 										inBigMovie={false}
+										mediaType="tv"
 									/>
 								)}
 							</Section>
@@ -336,6 +338,7 @@ function Tv() {
 										detailData={nowPlayingDetails}
 										sliderType="nowPlaying"
 										inBigMovie={false}
+										mediaType="tv"
 									/>
 								)}
 							</Section>
@@ -347,6 +350,7 @@ function Tv() {
 										detailData={topRatedDetails}
 										sliderType="topRated"
 										inBigMovie={false}
+										mediaType="tv"
 									/>
 								)}
 							</Section>

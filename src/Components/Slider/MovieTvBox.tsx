@@ -10,6 +10,7 @@ import {
 	IMovieRecommendsResult,
 	ITvRecommendsResult,
 } from "../../Interfaces/API/IGetRecommends";
+import { IGetTvDetailResult } from "../../Interfaces/API/IGetDetails/IGetTvDetails";
 
 const Box = styled(motion.div)`
 	display: flex;
@@ -55,6 +56,7 @@ const BoxImgContainer = styled(motion.div)<{
 	pos: (string | number)[] | string;
 	transform: (string | number)[];
 	logowidth: string;
+	id: string;
 }>`
 	position: relative;
 	background-size: cover;
@@ -70,31 +72,52 @@ const BoxImgContainer = styled(motion.div)<{
 		background-image: linear-gradient(to top, #1f1f1f, 5%, transparent);
 	}
 
-	> img:first-child {
+	img:first-child {
 		max-height: 100%;
 	}
-	> img:last-child {
+	div {
+		width: 50%;
+		height: 50%;
 		position: absolute;
+		display: flex;
+		justify-content: flex-start;
+		align-items: flex-end;
 		top: ${(props) => props.pos[0]}l;
 		right: ${(props) => props.pos[1]};
 		bottom: ${(props) => props.pos[2]};
 		left: ${(props) => props.pos[3]};
-		width: ${(props) => props.logowidth};
-		max-height: 100%;
 		transform: translate(
 			${(props) => props.transform[0]},
 			${(props) => props.transform[1]}
 		);
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			object-position: left bottom;
+		}
 	}
-	> h2 {
-		position: absolute;
-		bottom: 2vh;
-		left: 2vh;
-		font-size: 2vh;
-		width: 40%;
-		font-family: "Oswald", sans-serif;
+	h2 {
+		width: 100%;
+		font-family: ${(props) =>
+			Number(props.id) % 3 === 0
+				? "Oswald, sans-serif"
+				: Number(props.id) % 3 === 1
+				? "Russo One, cursive"
+				: "Tilt Prism, cursive"};
 		font-weight: 900;
-		text-transform: uppercase;
+		color: ${(props) => props.theme.white.lighter};
+		text-transform: ${(props) =>
+			Number(props.id) % 2 === 0 ? "capitalize" : "uppercase"};
+		align-self: flex-end;
+		text-shadow: ${(props) =>
+			Number(props.id) % 4 === 0
+				? "1px 1px 2px #333333, 0 0 1em #333333, 0 0 0.2em #333333"
+				: Number(props.id) % 4 === 1
+				? "2px 2px #558ABB"
+				: Number(props.id) % 4 === 2
+				? "1px 1px 2px red, 0 0 1em pink, 0 0 0.2em pink"
+				: "1px 1px 4px red"};
 	}
 `;
 
@@ -130,6 +153,8 @@ const Info = styled(motion.div)`
 	> div:nth-child(2) {
 		display: flex;
 		align-items: center;
+		font-size: 0.9rem;
+		width: 100%;
 		> div {
 			display: flex;
 			justify-content: center;
@@ -160,14 +185,18 @@ const infoVariants = {
 	},
 };
 
+const InfoBlock = styled.div`
+	font-size: 0.8 rem;
+`;
+
 function InfoPopup({
 	isHovered,
-	movie,
+	mediaItem,
 	onExpandClicked,
 }: {
 	isHovered: boolean;
-	movie: IGetMovieDetailResult;
-	onExpandClicked: (movieId: string) => void;
+	mediaItem: IGetMovieDetailResult | IGetTvDetailResult;
+	onExpandClicked: (id: string) => void;
 }) {
 	return (
 		<Info variants={infoVariants}>
@@ -175,25 +204,26 @@ function InfoPopup({
 				<span className="material-icons-outlined">favorite_border</span>
 				<span
 					className="material-icons"
-					onClick={() => onExpandClicked(movie.id + "")}
+					onClick={() => onExpandClicked(mediaItem.id + "")}
 				>
 					expand_more
 				</span>
 			</div>
-			<div>
+			<InfoBlock>
 				<div>
 					<span className="material-icons">star</span>
-					<span>
-						{formatRating(movie?.vote_average) +
-							" " +
-							formatVoteCount(movie?.vote_count)}
-					</span>
+					<span>{formatRating(mediaItem?.vote_average)}</span>
 				</div>
 				<MidDot />
-				<span>{formatTime(movie.runtime || 0)}</span>
-			</div>
+
+				<span>
+					{isMovieDetail(mediaItem)
+						? formatTime(mediaItem.runtime || 0)
+						: mediaItem.number_of_episodes + " episodes"}
+				</span>
+			</InfoBlock>
 			<div>
-				<Genres movie={movie} />
+				<Genres movie={mediaItem} />
 			</div>
 		</Info>
 	);
@@ -201,7 +231,7 @@ function InfoPopup({
 
 export interface IMovieTvBox {
 	handleBoxIndexHover: (index: number) => void;
-	movie: IGetMovieDetailResult;
+	mediaItem: IGetMovieDetailResult | IGetTvDetailResult;
 	imageData: IGetMovieImagesResult[] | undefined;
 	sliderType: string;
 	hoveredIndex: number;
@@ -216,9 +246,17 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 	return recommend.hasOwnProperty("name");
 }
 
+function isMovieDetail(mediaItem: any): mediaItem is IGetMovieDetailResult {
+	return mediaItem.hasOwnProperty("title");
+}
+
+function isTvDetail(mediaItem: any): mediaItem is IGetTvDetailResult {
+	return mediaItem.hasOwnProperty("name");
+}
+
 export function MovieTvBox({
 	handleBoxIndexHover,
-	movie,
+	mediaItem,
 	imageData,
 	sliderType,
 	hoveredIndex,
@@ -231,34 +269,43 @@ export function MovieTvBox({
 			whileHover="hover"
 			exit="exit"
 			transition={{ type: "tween" }}
-			key={movie.id}
-			layoutId={movie.id + "" + sliderType}
-			onMouseEnter={() => handleBoxIndexHover(movie.id)}
+			key={mediaItem.id}
+			layoutId={mediaItem.id + "" + sliderType}
+			onMouseEnter={() => handleBoxIndexHover(mediaItem.id)}
 			onMouseLeave={() => handleBoxIndexHover(-1)}
 		>
 			<BoxImgContainer
 				pos={["none", "none", 0, 0]}
 				transform={["2vh", "-2vh"]}
-				logowidth={"35%"}
+				logowidth={"50%"}
+				id={mediaItem.id + ""}
 			>
 				<img
-					src={makeImagePath(movie.backdrop_path || movie.poster_path, "w500")}
+					src={makeImagePath(
+						mediaItem.backdrop_path || mediaItem.poster_path,
+						"w500"
+					)}
 				/>
-				{imageData?.find((obj) => obj.id === movie.id)?.logos[0] ? (
-					<img
-						src={makeImagePath(
-							imageData.find((obj) => obj.id === movie.id)?.logos[0].file_path,
-							"w500"
-						)}
-					/>
-				) : (
-					<h2>{movie.title}</h2>
-				)}
+				<div>
+					{imageData?.find((obj) => obj.id === mediaItem.id)?.logos[0] ? (
+						<img
+							src={makeImagePath(
+								imageData.find((obj) => obj.id === mediaItem.id)?.logos[0]
+									.file_path,
+								"w500"
+							)}
+						/>
+					) : (
+						<h2>
+							{isMovieDetail(mediaItem) ? mediaItem.title : mediaItem.name}
+						</h2>
+					)}
+				</div>
 			</BoxImgContainer>
 			<AnimatePresence initial={false}>
 				<InfoPopup
-					isHovered={hoveredIndex === movie.id}
-					movie={movie}
+					isHovered={hoveredIndex === mediaItem.id}
+					mediaItem={mediaItem}
 					onExpandClicked={onExpandClicked}
 				/>
 			</AnimatePresence>

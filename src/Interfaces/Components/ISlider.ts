@@ -5,6 +5,7 @@ import { IGetResult } from "../API/IGetResults";
 export type ISliderBtnPos = "left" | "right";
 import { Cast } from "../API/IGetCredits";
 import { ReviewResults } from "../API/IGetReviews";
+import { IGetTvDetailResult } from "../API/IGetDetails/IGetTvDetails";
 
 export interface IHeroSlider {
 	heroMovieImages: IGetMovieImagesResult[];
@@ -15,10 +16,11 @@ export interface ISlider {
 	forCast?: { data: Cast[]; movieId: string };
 	forReview?: { data: ReviewResults[]; movieId: string };
 	imageData?: IGetMovieImagesResult[] | undefined;
-	detailData?: IGetMovieDetailResult[];
+	detailData?: IGetMovieDetailResult[] | IGetTvDetailResult[];
 	wrapperMargin?: number;
 	sliderType: string;
 	inBigMovie: boolean;
+	mediaType: string;
 	offset?: number;
 }
 

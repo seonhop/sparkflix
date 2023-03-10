@@ -4,7 +4,7 @@ import { favMovieIDs, IFavMovieIDs } from "./favMovies";
 import { IGetResult } from "../Interfaces/API/IGetResults";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
-import { IGetTvDetails } from "../Interfaces/API/IGetDetails/IGetTvDetails";
+import { IGetTvDetailResult } from "../Interfaces/API/IGetDetails/IGetTvDetails";
 import { useEffect } from "react";
 import { BASE_PATH, API_KEY } from "../api";
 

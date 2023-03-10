@@ -325,6 +325,7 @@ function Home() {
 							wrapperMargin={SLIDER_MARGIN}
 							sliderType="fav"
 							inBigMovie={false}
+							mediaType="movies"
 						/>
 
 						<>
@@ -336,6 +337,7 @@ function Home() {
 										detailData={popularDetails}
 										sliderType="popular"
 										inBigMovie={false}
+										mediaType="movies"
 									/>
 								)}
 							</Section>
@@ -347,6 +349,7 @@ function Home() {
 										detailData={nowPlayingDetails}
 										sliderType="nowPlaying"
 										inBigMovie={false}
+										mediaType="movies"
 									/>
 								)}
 							</Section>
@@ -358,6 +361,7 @@ function Home() {
 										detailData={topRatedDetails}
 										sliderType="topRated"
 										inBigMovie={false}
+										mediaType="movies"
 									/>
 								)}
 							</Section>

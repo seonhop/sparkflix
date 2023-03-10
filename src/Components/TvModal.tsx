@@ -21,8 +21,7 @@ import {
 	makeAvatarPath,
 	makeMovieLogoPath,
 } from "../utils/makePath";
-import { NETFLIX_LOGO_URL } from "../utils/consts";
-import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
+import { Endpoint, NETFLIX_LOGO_URL } from "../utils/consts";
 import { useQuery } from "react-query";
 import {
 	getCredits,
@@ -45,6 +44,8 @@ import {
 	ITvRecommendsResult,
 } from "../Interfaces/API/IGetRecommends";
 import { Slider } from "./Slider/Slider";
+import { IGetTvDetailResult } from "../Interfaces/API/IGetDetails/IGetTvDetails";
+import { fetchData } from "../api";
 
 const GlobalStyle = createGlobalStyle`
   html{overflow: hidden;}
@@ -493,64 +494,69 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 
 function TvModal() {
 	const navigate = useNavigate();
-	const onRecommendClick = (movieId: string) => navigate(`/movies/${movieId}`);
-	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
+	const onRecommendClick = (tvId: string) => navigate(`/tv/${tvId}`);
+	const moviePathMatch: PathMatch<string> | null = useMatch("/tv/:tvId");
 	console.log(moviePathMatch);
-	const clickedMovieId = moviePathMatch?.params.movieId;
-	const { data: movieDetailResult } = useQuery<IGetMovieDetailResult>(
-		["movieDetailResult", clickedMovieId],
-		() => getDetail(Number(clickedMovieId), "en")
+	const clickedTvId = moviePathMatch?.params.tvId;
+	const { data: tvDetailResult } = useQuery<IGetTvDetailResult>(
+		["tvDetailResult", clickedTvId],
+		() => fetchData(Endpoint.details, "tv", Number(clickedTvId), "en")
 	);
-	const { data: movieImages } = useQuery<IGetMovieImagesResult>(
-		["movieImagesResult", clickedMovieId],
-		() => getImages(Number(clickedMovieId), "en,cn")
+	console.log("detail", tvDetailResult);
+	const { data: tvImages } = useQuery<IGetMovieImagesResult>(
+		["tvImagesResult", clickedTvId],
+		() => fetchData(Endpoint.images, "tv", Number(clickedTvId), "en,cn")
 	);
-	const { data: movieRecommends, isLoading: isMovieRecommendsLoading } =
-		useQuery<IGetRecommendsResults>(
-			["movieRecommendsResult", clickedMovieId],
-			() => getRecommends(Number(clickedMovieId))
+	console.log("images", tvImages);
+	const { data: tvRecommends, isLoading: isMovieRecommendsLoading } =
+		useQuery<IGetRecommendsResults>(["tvRecommendsResult", clickedTvId], () =>
+			fetchData(Endpoint.recommends, "tv", Number(clickedTvId))
 		);
-
-	const { data: movieReviews, isLoading: isMovieReviewsLoading } =
-		useQuery<IGetReviews>(["movieReviewsResult", clickedMovieId], () =>
-			getReviews(Number(clickedMovieId))
+	console.log("recommends", tvRecommends);
+	const { data: tvReviews, isLoading: isMovieReviewsLoading } =
+		useQuery<IGetReviews>(["movieReviewsResult", clickedTvId], () =>
+			fetchData(Endpoint.reviews, "tv", Number(clickedTvId))
 		);
-	const { data: movieCreditsResult } = useQuery<IGetCredits>(
-		["movieCreditResult", clickedMovieId],
-		() => getCredits(Number(clickedMovieId))
+	console.log("reviews", tvReviews);
+	const { data: tvCreditsResult } = useQuery<IGetCredits>(
+		["movieCreditResult", clickedTvId],
+		() => fetchData(Endpoint.credits, "tv", Number(clickedTvId))
 	);
+	console.log("tvCredits", tvCreditsResult);
 	let mainCast = undefined;
 	let reviews = undefined;
-	if (movieReviews && movieReviews.results) {
-		reviews = movieReviews.results;
+	if (tvReviews && tvReviews.results) {
+		reviews = tvReviews.results;
 	}
-	if (movieCreditsResult) {
-		mainCast = movieCreditsResult.cast.slice(0, 12);
+	if (tvCreditsResult) {
+		mainCast = tvCreditsResult.cast.slice(0, 12);
 	}
 	const [logoExists, setLogoExists] = useState(false);
 	const [movieImagesExists, setMovieImagesExists] = useState(false);
 
-	const clickedMovie = moviePathMatch?.params.movieId && movieDetailResult;
+	const clickedMovie = moviePathMatch?.params.tvId && tvDetailResult;
+	console.log("clickedMovie", clickedMovie);
 	const { scrollY } = useScroll();
 
 	const onModalClose = () => {
 		navigate("/");
 	};
 	useEffect(() => {
-		if (movieImages) {
+		if (tvImages) {
 			setMovieImagesExists(true);
 		}
-		if (movieImages?.logos) {
+		if (tvImages?.logos) {
 			setLogoExists(true);
 		}
-	}, [logoExists, movieImages]);
-	const movieImageLogoExist = logoExists && movieImages;
+	}, [logoExists, tvImages]);
+	const movieImageLogoExist = logoExists && tvImages;
 	console.log(reviews);
 	const sectionHeights = {
 		cast: "40vh",
 		review: "40vh",
 		rec: "40vh",
 	};
+
 	return (
 		<>
 			<GlobalStyle />
@@ -576,15 +582,15 @@ function TvModal() {
 											/>
 										</BigCover>
 										<BigTitle>
-											{logoExists && movieImages?.logos?.[0] ? (
+											{logoExists && tvImages?.logos?.[0] ? (
 												<img
 													src={makeMovieLogoPath(
-														movieImages?.logos?.[0].file_path,
+														tvImages?.logos?.[0].file_path,
 														"w500"
 													)}
 												/>
 											) : (
-												clickedMovie.title
+												clickedMovie.name
 											)}
 										</BigTitle>
 										<CloseBtn className="material-icons" onClick={onModalClose}>
@@ -596,7 +602,10 @@ function TvModal() {
 											<div>
 												<YearGenreCountryContainer>
 													<span>
-														{new Date(clickedMovie.release_date).getFullYear()}
+														{"Since " +
+															new Date(
+																clickedMovie.first_air_date
+															).getFullYear()}
 													</span>
 													<span>
 														{formatGenres(clickedMovie.genres, " / ")}
@@ -616,7 +625,9 @@ function TvModal() {
 														</span>
 													</div>
 													<MidDot />
-													<span>{formatTime(clickedMovie.runtime || 0)}</span>
+													<span>
+														{formatTime(clickedMovie.episode_run_time[0] || 0)}
+													</span>
 												</InfoContainer>
 												<BigTagline>
 													{clickedMovie.tagline
@@ -628,7 +639,7 @@ function TvModal() {
 																mainCast[0].name
 														  }, ${mainCast[1].name} and more
 														`
-														: clickedMovie.title}
+														: clickedMovie.name}
 												</BigTagline>
 											</div>
 											<BigOverview>
@@ -650,8 +661,8 @@ function TvModal() {
 												<CastSlider
 													cast={mainCast}
 													movieId={
-														clickedMovieId
-															? clickedMovieId
+														clickedTvId
+															? clickedTvId
 															: new Date().getTime.toString()
 													}
 												/>
@@ -671,23 +682,23 @@ function TvModal() {
 												<ReviewSlider
 													reviews={reviews}
 													movieId={
-														clickedMovieId
-															? clickedMovieId
+														clickedTvId
+															? clickedTvId
 															: new Date().getTime().toString()
 													}
 												/>
 											)}
 										</BigMovieSection>
-										{movieRecommends?.results &&
-											movieRecommends.results.length > 0 && (
+										{tvRecommends?.results &&
+											tvRecommends.results.length > 0 && (
 												<BigMovieSection>
 													<Divider />
 													<BigMovieSectionTitle>
 														Recommendations
 													</BigMovieSectionTitle>
 													<RecommendationWrapper>
-														{movieRecommends &&
-															movieRecommends.results
+														{tvRecommends &&
+															tvRecommends.results
 																.slice(0, 6)
 																.map((recommend, index) => (
 																	<Recommendation

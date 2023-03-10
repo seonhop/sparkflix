@@ -88,7 +88,7 @@ export function MovieTvContainer({
 						<MovieTvBox
 							key={movie.id}
 							handleBoxIndexHover={handleBoxIndexHover}
-							movie={movie}
+							mediaItem={movie}
 							imageData={imageData}
 							sliderType={sliderType}
 							hoveredIndex={hoveredIndex}

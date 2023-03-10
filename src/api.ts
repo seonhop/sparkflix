@@ -34,7 +34,7 @@ export function fetchData(
 		url += `&with_genres=${genre}`;
 	}
 
-	console.log("hero", url);
+	console.log("api url", url);
 	return fetch(url).then((response) => response.json());
 }
 

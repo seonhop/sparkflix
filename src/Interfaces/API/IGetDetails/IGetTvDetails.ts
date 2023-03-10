@@ -1,4 +1,4 @@
-export interface IGetTvDetails {
+export interface IGetTvDetailResult {
 	adult: boolean;
 	backdrop_path: string;
 	created_by: CreatedBy[];

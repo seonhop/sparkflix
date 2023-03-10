@@ -755,6 +755,7 @@ export function Slider({
 	forCast,
 	forReview,
 	offset,
+	mediaType,
 }: ISlider) {
 	const navigate = useNavigate();
 	const [dirRight, setDirRight] = useState(true);
@@ -781,8 +782,8 @@ export function Slider({
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
-	const onExpandClicked = (movieId: string) => {
-		navigate(`/movies/${movieId}`);
+	const onExpandClicked = (id: string) => {
+		navigate(`/${mediaType}/${id}`);
 	};
 	console.log(index);
 
@@ -833,7 +834,7 @@ export function Slider({
 										<MovieTvBox
 											key={movie.id}
 											handleBoxIndexHover={handleBoxIndexHover}
-											movie={movie}
+											mediaItem={movie}
 											imageData={imageData}
 											sliderType={sliderType}
 											hoveredIndex={hoveredIndex}
