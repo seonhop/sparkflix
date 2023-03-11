@@ -6,12 +6,14 @@ export function fetchData(
 	mediaType: "movie" | "tv",
 	id?: number,
 	originalLanguage?: string,
+	seasonNum?: number,
 	genre?: string,
 	originalCountry?: string
 ) {
 	let url = `${BASE_PATH}/${mediaType}`;
 	let language = "en";
 	let country = "en";
+	let defaultSeasonNum = 1;
 
 	if (id) {
 		url += `/${id}`;
@@ -22,6 +24,15 @@ export function fetchData(
 	if (originalCountry) {
 		country = originalCountry;
 	}
+	if (seasonNum) {
+		defaultSeasonNum = seasonNum;
+	}
+	console.log(endpoint, endpoint.includes("{season_num}"));
+
+	if (endpoint.includes("{season_num}")) {
+		endpoint = endpoint.replace("{season_num}", defaultSeasonNum + "");
+	}
+	console.log(endpoint, endpoint.includes("{season_num}"));
 
 	url += `${endpoint}?api_key=${API_KEY}&language=en`;
 	if (endpoint === "/images") {

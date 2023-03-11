@@ -3,7 +3,25 @@ import { ProductionCountry } from "../Interfaces/API/IGetDetails/IGetMovieDetail
 export function formatTime(totalMinutes: number) {
 	const hours = Math.floor(totalMinutes / 60);
 	const minutes = totalMinutes % 60;
+	if (totalMinutes < 60) {
+		return `${minutes}m`;
+	}
 	return `${hours}h ${minutes}m`;
+}
+
+export function formatAirDate(date: number) {
+	const today = new Date();
+	const formattedDate = new Date(date);
+
+	if (formattedDate.getFullYear() < today.getFullYear()) {
+		return `${formattedDate.toLocaleString("default", {
+			month: "short",
+		})} ${formattedDate.getDate()}, ${formattedDate.getFullYear()}`;
+	} else {
+		return `${formattedDate.toLocaleString("default", {
+			month: "short",
+		})} ${formattedDate.getDate()}`;
+	}
 }
 
 export function formatRating(vote_average: number | undefined) {

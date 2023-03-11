@@ -103,11 +103,26 @@ const BigCover = styled.div`
 	}
 `;
 
-const BigTitle = styled.div`
+const BigTitle = styled.div<{ id: string }>`
 	color: ${(props) => props.theme.white.lighter};
-	font-family: "Oswald", sans-serif;
+	font-family: ${(props) =>
+		Number(props.id) % 3 === 0
+			? "Oswald, sans-serif"
+			: Number(props.id) % 3 === 1
+			? "Russo One, cursive"
+			: "Tilt Prism, cursive"};
 	font-weight: 900;
-	text-transform: uppercase;
+	color: ${(props) => props.theme.white.lighter};
+	text-transform: ${(props) =>
+		Number(props.id) % 2 === 0 ? "capitalize" : "uppercase"};
+	text-shadow: ${(props) =>
+		Number(props.id) % 4 === 0
+			? "1px 1px 2px #333333, 0 0 1em #333333, 0 0 0.2em #333333"
+			: Number(props.id) % 4 === 1
+			? "2px 2px #558ABB"
+			: Number(props.id) % 4 === 2
+			? "1px 1px 2px red, 0 0 1em pink, 0 0 0.2em pink"
+			: "1px 1px 4px red"};
 
 	width: 40%;
 	padding: 40px;
@@ -575,7 +590,7 @@ function MovieModal() {
 												)}
 											/>
 										</BigCover>
-										<BigTitle>
+										<BigTitle id={clickedMovie.id + ""}>
 											{logoExists && movieImages?.logos?.[0] ? (
 												<img
 													src={makeMovieLogoPath(

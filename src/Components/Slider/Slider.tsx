@@ -9,6 +9,7 @@ import {
 	formatRating,
 	formatGenres,
 	formatVoteCount,
+	formatAirDate,
 } from "../../utils/format";
 import { OFF_SET, SLIDER_MARGIN, NETFLIX_LOGO_URL } from "../../utils/consts";
 import { makeImagePath, makeAvatarPath } from "../../utils/makePath";
@@ -34,6 +35,8 @@ import { dir } from "console";
 import { MovieTvBox } from "./MovieTvBox";
 import { SliderPages } from "./SliderPages";
 import { CastContainer, MovieTvContainer } from "./SliderContainers";
+import { off } from "process";
+import { Episode } from "../../Interfaces/API/IGetSeasonDetail";
 
 const SliderWrapper = styled.div<{ margin?: number }>`
 	position: relative;
@@ -60,7 +63,7 @@ const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
 `;
 
 const SliderBtnBigMovie = styled(SliderBtn)`
-	top: 15%;
+	top: 4.5vh;
 `;
 
 const sliderBtnVariants = {
@@ -304,7 +307,7 @@ const Pagination = styled(motion.div)<IPaginationProps>`
 	display: grid;
 	position: absolute;
 	right: 0;
-	top: -20px;
+	top: -10px;
 	z-index: 10;
 	grid-template-columns: repeat(${(props) => props.maxindex + 1}, 1fr);
 	grid-gap: 2px;
@@ -333,6 +336,12 @@ const paginationVariants = {
 			type: "tween",
 		},
 	},
+	exit: {
+		opacity: 0,
+		transition: {
+			duration: 0,
+		},
+	},
 };
 
 const CastCardContainer = styled(motion.div)`
@@ -348,7 +357,11 @@ const CastCardContainer = styled(motion.div)`
 	}
 `;
 
-const CastCard = styled(motion.div)`
+interface ICastCard {
+	pathExists: boolean;
+}
+
+const CastCard = styled(motion.div)<ICastCard>`
 	display: grid;
 	grid-template-columns: 1fr 3fr;
 	grid-gap: 12px;
@@ -363,7 +376,9 @@ const CastCard = styled(motion.div)`
 			object-fit: cover;
 			object-position: center 20%;
 			border-radius: inherit;
-			width: 100%;
+			max-width: ${(props) => (props.pathExists ? "none" : "100%")};
+			width: ${(props) => (props.pathExists ? "100%" : "none")};
+
 			height: 100%;
 		}
 	}
@@ -418,24 +433,75 @@ interface IReviewSliderProps {
 	movieId: string;
 }
 
-const ReviewCardWrapper = styled(motion.div)<{
-	arePages: boolean;
-	noReview: boolean;
-}>`
+const SectionWrapper = styled(motion.div)<{ noData: boolean }>`
 	position: absolute;
 	width: 100%;
 	height: 26vh;
+	> div:first-child {
+		display: ${(props) => props.noData && "flex"};
+		align-items: ${(props) => props.noData && "center"};
+		justify-content: ${(props) => props.noData && "center"};
+		color: ${(props) => props.noData && props.theme.white.darker};
+		border: ${(props) =>
+			props.noData && `1px dashed ${props.theme.black.lighter}`};
+		height: 100%;
+	}
+`;
+
+const ReviewCardWrapper = styled(SectionWrapper)<{
+	arePages: boolean;
+}>`
 	display: grid;
 	grid-template-columns: ${(props) =>
-		props.noReview ? `1fr` : `repeat(2, 1fr)`};
+		props.noData ? `1fr` : `repeat(2, 1fr)`};
 	grid-gap: 20px;
-	div:first-child {
-		display: ${(props) => props.noReview && "flex"};
-		align-items: ${(props) => props.noReview && "center"};
-		justify-content: ${(props) => props.noReview && "center"};
-		color: ${(props) => props.noReview && props.theme.white.darker};
-		border: ${(props) =>
-			props.noReview && `1px dashed ${props.theme.black.lighter}`};
+`;
+
+const EpisodeContainer = styled(motion.div)`
+	display: grid;
+	grid-gap: 20px;
+	grid-template-columns: 1fr 1.5fr;
+	align-self: flex-end;
+	height: 100%;
+	img {
+		max-width: 100%;
+		max-height: 100%;
+		height: 100%;
+		border-radius: 8px;
+	}
+	> div:last-child {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		overflow: hidden;
+		span {
+			color: ${(props) => props.theme.white.darker};
+			margin-bottom: 1vh;
+		}
+
+		p {
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			line-height: 1.25;
+			-webkit-box-orient: vertical;
+			overflow: scroll;
+		}
+	}
+`;
+
+const EpisodeTitleContainer = styled.div`
+	max-width: 30vw;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	h1 {
+		width: 100%;
+		font-weight: 600px;
+		font-size: 1.4rem;
+		margin-bottom: 3vh;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 `;
 
@@ -488,6 +554,180 @@ const ReviewCard = styled(motion.div)`
 		text-overflow: ellipsis;
 	}
 `;
+
+interface IEpisodeSliderProps {
+	episodes: Episode[];
+	tvId: string;
+	images: IGetMovieImagesResult | undefined;
+}
+
+const EpisodeBackdropContainer = styled(motion.div)``;
+
+const EpisodeDetailContainer = styled(motion.div)``;
+
+const sliderVariants = {
+	hidden: {},
+	visible: {},
+	hover: {},
+	exot: {},
+};
+
+export function EpisodeSlider({ episodes, tvId, images }: IEpisodeSliderProps) {
+	const [arePages, setArePages] = useState(true);
+	const [noEpisode, setNoReview] = useState(false);
+	const [dirRight, setDirRight] = useState(true);
+	const [index, setIndex] = useState(0);
+	const [backdropIndex, setBackdropIndex] = useState(0);
+	const [leaving, setLeaving] = useState(false);
+	const toggleLeaving = () => {
+		setLeaving((prev) => !prev);
+	};
+	const totalEpisodes = episodes.length;
+	const totalBackdrops = images?.backdrops.length ?? 0;
+	const offset = 1;
+	const maxIndex = Math.ceil(totalEpisodes / offset) - 1;
+	const maxBackdropIndex =
+		totalBackdrops - 1 > maxIndex ? maxIndex : totalBackdrops - 1;
+	useEffect(() => {
+		if (totalEpisodes <= offset) {
+			setArePages(false);
+		}
+		if (totalEpisodes <= 0) {
+			setNoReview(true);
+		}
+	}, [arePages, noEpisode]);
+
+	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
+		if (episodes) {
+			if (leaving) return;
+			toggleLeaving();
+
+			if (sliderBtnPos === "left") {
+				setIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
+				if (totalBackdrops && totalBackdrops !== 0) {
+					setBackdropIndex((prev) =>
+						prev === 0 ? maxBackdropIndex : prev - 1
+					);
+				}
+				setDirRight(false);
+			} else {
+				setIndex((prev) => (prev === maxIndex ? 0 : prev + 1));
+				if (totalBackdrops && totalBackdrops !== 0) {
+					setBackdropIndex((prev) =>
+						prev === maxBackdropIndex ? 0 : prev + 1
+					);
+				}
+				setDirRight(true);
+			}
+		}
+	};
+	console.log(arePages);
+	return (
+		<>
+			<SliderWrapper>
+				<AnimatePresence
+					initial={false}
+					onExitComplete={toggleLeaving}
+					custom={dirRight}
+				>
+					<SectionWrapper
+						variants={castSliderContainerVariants}
+						initial="hidden"
+						animate="visible"
+						whileHover="hover"
+						exit="exit"
+						key={"ep" + tvId + index}
+						transition={{ type: "tween", duration: 1 }}
+						custom={dirRight}
+						noData={noEpisode}
+					>
+						{noEpisode ? (
+							<div> NO EPISODE Available</div>
+						) : (
+							episodes
+								.slice(offset * index, offset * index + offset)
+								.map((episode, index) => (
+									<EpisodeContainer>
+										<div>
+											<img
+												src={
+													episode.still_path
+														? makeImagePath(episode.still_path, "original")
+														: makeImagePath(
+																images?.backdrops[backdropIndex].file_path
+														  )
+												}
+											/>
+										</div>
+										<div>
+											<EpisodeTitleContainer>
+												<h1>
+													{episode.name !== `Episode ${episode.episode_number}`
+														? `EP ${episode.episode_number} | ${episode.name}`
+														: `${episode.name}`}
+												</h1>
+											</EpisodeTitleContainer>
+
+											<span>
+												{formatAirDate(new Date(episode.air_date).getTime())
+													? formatAirDate(
+															new Date(episode.air_date).getTime()
+													  ) + " • "
+													: ""}
+												{formatTime(episode.runtime)}
+											</span>
+											<p>
+												{episode.overview
+													? episode.overview
+													: "No overview available :("}
+											</p>
+										</div>
+									</EpisodeContainer>
+								))
+						)}
+						{arePages && (
+							<>
+								{" "}
+								<SliderBtnBigMovie
+									variants={sliderBtnVariants}
+									transition={{ type: "tween" }}
+									pos="left"
+									onClick={() => manipulateIndex("left", maxIndex)}
+								>
+									<SliderBtnIcon className="material-icons">
+										arrow_back_ios
+									</SliderBtnIcon>
+								</SliderBtnBigMovie>
+								<SliderBtnBigMovie
+									variants={sliderBtnVariants}
+									transition={{ type: "tween" }}
+									pos="right"
+									onClick={() => manipulateIndex("right", maxIndex)}
+								>
+									<SliderBtnIcon className="material-icons">
+										arrow_forward_ios
+									</SliderBtnIcon>
+								</SliderBtnBigMovie>
+								<BigMoviePagination
+									maxindex={maxIndex}
+									currindex={index}
+									margin={SLIDER_MARGIN}
+									variants={paginationVariants}
+								>
+									{Array(maxIndex + 1)
+										.fill(null)
+										.map((_, index) => (
+											<div key={index}></div>
+										))}
+								</BigMoviePagination>
+							</>
+						)}
+					</SectionWrapper>
+				</AnimatePresence>
+			</SliderWrapper>
+		</>
+	);
+}
 
 export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 	const [arePages, setArePages] = useState(true);
@@ -543,10 +783,10 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 						transition={{ type: "tween", duration: 1 }}
 						custom={dirRight}
 						arePages={arePages}
-						noReview={noReview}
+						noData={noReview}
 					>
 						{noReview ? (
-							<div> NO REVIEWS YET</div>
+							<div> No reviews yet</div>
 						) : (
 							reviews
 								.slice(offset * index, offset * index + offset)
@@ -584,7 +824,7 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 								))
 						)}
 						{arePages && (
-							<>
+							<MotionDiv>
 								{" "}
 								<SliderBtnBigMovie
 									variants={sliderBtnVariants}
@@ -615,10 +855,14 @@ export function ReviewSlider({ reviews, movieId }: IReviewSliderProps) {
 									{Array(maxIndex + 1)
 										.fill(null)
 										.map((_, index) => (
-											<div key={index}></div>
+											<MotionDiv
+												initial={{ opacity: 1 }}
+												exit={{ opacity: 0 }}
+												key={index}
+											></MotionDiv>
 										))}
 								</BigMoviePagination>
-							</>
+							</MotionDiv>
 						)}
 					</ReviewCardWrapper>
 				</AnimatePresence>
@@ -638,13 +882,16 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 	};
 	const totalCast = cast.length;
 	const offset = 4;
-	const maxIndex = Math.floor(totalCast / offset) - 1;
+	const maxIndex = Math.ceil(totalCast / offset) - 1;
 
 	useEffect(() => {
-		if (maxIndex === 0) {
+		console.log("maxIndex", maxIndex === 0);
+		console.log("totalCast < offset", totalCast < offset);
+		if (totalCast < offset) {
 			setArePages(false);
 		}
-	}, [arePages]);
+	}, [totalCast, offset]);
+	console.log("arePages", arePages);
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
 		if (cast) {
 			if (leaving) return;
@@ -681,19 +928,19 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 						{cast
 							?.slice(offset * index, offset * index + offset)
 							.map((each_cast, index) => (
-								<CastCard key={index}>
+								<CastCard
+									key={index}
+									pathExists={Boolean(each_cast.profile_path)}
+								>
 									<React.Fragment>
 										<MotionDiv>
-											{each_cast.profile_path ? (
-												<img
-													src={makeImagePath(
-														each_cast.profile_path,
-														"original"
-													)}
-												/>
-											) : (
-												<img src={NETFLIX_LOGO_URL} />
-											)}
+											<img
+												src={makeImagePath(
+													each_cast.profile_path,
+													"original",
+													true
+												)}
+											/>
 										</MotionDiv>
 
 										<MotionDiv>

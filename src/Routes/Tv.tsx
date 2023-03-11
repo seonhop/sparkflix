@@ -108,7 +108,7 @@ const Section = styled.div`
 function Tv() {
 	const navigate = useNavigate();
 	const onHeroClick = () => {
-		navigate(`/movies/${HERO_TV_ID}`);
+		navigate(`/tv/${HERO_TV_ID}`);
 	};
 	const [isDoneLoading, setIsDoneLoading] = useState(false);
 	const { data: heroImage, isLoading: heroImageLoading } =
@@ -118,7 +118,15 @@ function Tv() {
 	const { data: favMovies, isLoading: favMovieLoading } = useQuery<IGetResult>(
 		["fav", "tv"],
 		() =>
-			fetchData(Endpoint.popular, "tv", undefined, undefined, undefined, "ko")
+			fetchData(
+				Endpoint.popular,
+				"tv",
+				undefined,
+				undefined,
+				undefined,
+				undefined,
+				"ko"
+			)
 	);
 	const { data: favDetails, isLoading: favDetailsloading } = useQuery<
 		IGetTvDetailResult[]

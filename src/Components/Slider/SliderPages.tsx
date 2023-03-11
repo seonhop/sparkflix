@@ -21,10 +21,10 @@ const Pagination = styled(motion.div)<IPaginationProps>`
 	> div {
 		height: 2px;
 		width: 20px;
-		background-color: ${(props) => props.theme.black.lighter};
+		background-color: ${(props) => props.theme.white.darker};
 	}
 	> div:nth-child(${(props) => props.currindex + 1}) {
-		background-color: ${(props) => props.theme.white.darker};
+		background-color: ${(props) => props.theme.white.lighter};
 	}
 `;
 
@@ -43,12 +43,20 @@ const paginationVariants = {
 			type: "tween",
 		},
 	},
+	exit: {
+		opacity: 0,
+		transition: {
+			duration: 0,
+		},
+	},
 };
 
 export interface ISliderPages {
 	maxIndex: number;
 	index: number;
 }
+
+const MotionDiv = styled(motion.div)``;
 
 export function SliderPages({ maxIndex, index }: ISliderPages) {
 	return (
@@ -61,7 +69,7 @@ export function SliderPages({ maxIndex, index }: ISliderPages) {
 			{Array(maxIndex + 1)
 				.fill(null)
 				.map((_, index) => (
-					<div key={index}></div>
+					<MotionDiv key={index}></MotionDiv>
 				))}
 		</Pagination>
 	);

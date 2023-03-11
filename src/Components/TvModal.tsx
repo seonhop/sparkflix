@@ -35,7 +35,7 @@ import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
 import { Cast, IGetCredits } from "../Interfaces/API/IGetCredits";
 import React from "react";
-import { CastSlider, ReviewSlider } from "./Slider/Slider";
+import { CastSlider, EpisodeSlider, ReviewSlider } from "./Slider/Slider";
 import { click } from "@testing-library/user-event/dist/click";
 import { IGetReviews } from "../Interfaces/API/IGetReviews";
 import {
@@ -46,6 +46,7 @@ import {
 import { Slider } from "./Slider/Slider";
 import { IGetTvDetailResult } from "../Interfaces/API/IGetDetails/IGetTvDetails";
 import { fetchData } from "../api";
+import { IGetSeasonDetailResult } from "../Interfaces/API/IGetSeasonDetail";
 
 const GlobalStyle = createGlobalStyle`
   html{overflow: hidden;}
@@ -104,11 +105,26 @@ const BigCover = styled.div`
 	}
 `;
 
-const BigTitle = styled.div`
+const BigTitle = styled.div<{ id: string }>`
 	color: ${(props) => props.theme.white.lighter};
-	font-family: "Oswald", sans-serif;
+	font-family: ${(props) =>
+		Number(props.id) % 3 === 0
+			? "Oswald, sans-serif"
+			: Number(props.id) % 3 === 1
+			? "Russo One, cursive"
+			: "Tilt Prism, cursive"};
 	font-weight: 900;
-	text-transform: uppercase;
+	color: ${(props) => props.theme.white.lighter};
+	text-transform: ${(props) =>
+		Number(props.id) % 2 === 0 ? "capitalize" : "uppercase"};
+	text-shadow: ${(props) =>
+		Number(props.id) % 4 === 0
+			? "1px 1px 2px #333333, 0 0 1em #333333, 0 0 0.2em #333333"
+			: Number(props.id) % 4 === 1
+			? "2px 2px #558ABB"
+			: Number(props.id) % 4 === 2
+			? "1px 1px 2px red, 0 0 1em pink, 0 0 0.2em pink"
+			: "1px 1px 4px red"};
 
 	width: 40%;
 	padding: 40px;
@@ -276,12 +292,21 @@ const BigMovieSectionTitle = styled.span`
 	font-weight: 600;
 `;
 
+const EpisodeSectionTitle = styled.div`
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	span:last-child {
+		font-size: 1rem;
+		font-weight: 400;
+	}
+`;
+
 const BigMovieSection = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
 	height: 40vh;
-	max-height: 50vh;
 
 	width: 100%;
 	position: relative;
@@ -494,7 +519,10 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 
 function TvModal() {
 	const navigate = useNavigate();
-	const onRecommendClick = (tvId: string) => navigate(`/tv/${tvId}`);
+	const onRecommendClick = (tvId: string) => {
+		console.log(tvId);
+		navigate(`/tv/${tvId}`);
+	};
 	const moviePathMatch: PathMatch<string> | null = useMatch("/tv/:tvId");
 	console.log(moviePathMatch);
 	const clickedTvId = moviePathMatch?.params.tvId;
@@ -502,11 +530,18 @@ function TvModal() {
 		["tvDetailResult", clickedTvId],
 		() => fetchData(Endpoint.details, "tv", Number(clickedTvId), "en")
 	);
+
 	console.log("detail", tvDetailResult);
+	console.log(
+		"cropped detail",
+		tvDetailResult?.seasons[tvDetailResult?.seasons.length - 1]
+	);
 	const { data: tvImages } = useQuery<IGetMovieImagesResult>(
 		["tvImagesResult", clickedTvId],
 		() => fetchData(Endpoint.images, "tv", Number(clickedTvId), "en,cn")
 	);
+	const totalBackdrops = tvImages?.backdrops.length;
+
 	console.log("images", tvImages);
 	const { data: tvRecommends, isLoading: isMovieRecommendsLoading } =
 		useQuery<IGetRecommendsResults>(["tvRecommendsResult", clickedTvId], () =>
@@ -514,32 +549,56 @@ function TvModal() {
 		);
 	console.log("recommends", tvRecommends);
 	const { data: tvReviews, isLoading: isMovieReviewsLoading } =
-		useQuery<IGetReviews>(["movieReviewsResult", clickedTvId], () =>
+		useQuery<IGetReviews>(["tvReviewsResult", clickedTvId], () =>
 			fetchData(Endpoint.reviews, "tv", Number(clickedTvId))
 		);
 	console.log("reviews", tvReviews);
 	const { data: tvCreditsResult } = useQuery<IGetCredits>(
-		["movieCreditResult", clickedTvId],
+		["tvCreditResult", clickedTvId],
 		() => fetchData(Endpoint.credits, "tv", Number(clickedTvId))
 	);
 	console.log("tvCredits", tvCreditsResult);
-	let mainCast = undefined;
+	const lastSeasonNumber =
+		tvDetailResult?.seasons?.[tvDetailResult.seasons.length - 1]
+			?.season_number ?? 1;
+
+	const { data: tvSeasonData } = useQuery<IGetSeasonDetailResult>(
+		["tvEpisodeDetailResult", clickedTvId],
+		() =>
+			fetchData(
+				Endpoint.seasons,
+				"tv",
+				Number(clickedTvId),
+				undefined,
+				lastSeasonNumber
+			),
+		{ enabled: !!tvDetailResult }
+	);
+
+	const [latestSeason, setLatestSeason] = useState(1);
+	console.log("tvSeasonData", tvSeasonData);
+	const latestSeasonData = tvSeasonData?.episodes
+		.filter((episode) => episode.overview !== "")
+		.slice(-5)
+		.reverse();
 	let reviews = undefined;
 	if (tvReviews && tvReviews.results) {
 		reviews = tvReviews.results;
 	}
-	if (tvCreditsResult) {
-		mainCast = tvCreditsResult.cast.slice(0, 12);
-	}
+
+	console.log("credits", tvCreditsResult);
 	const [logoExists, setLogoExists] = useState(false);
 	const [movieImagesExists, setMovieImagesExists] = useState(false);
 
 	const clickedMovie = moviePathMatch?.params.tvId && tvDetailResult;
 	console.log("clickedMovie", clickedMovie);
-	const { scrollY } = useScroll();
-
+	const [mainCast, setMainCast] = useState<Cast[]>([]);
+	let newMainCast = undefined;
+	if (tvCreditsResult) {
+		newMainCast = tvCreditsResult.cast.slice(0, 12);
+	}
 	const onModalClose = () => {
-		navigate("/");
+		navigate("/tv");
 	};
 	useEffect(() => {
 		if (tvImages) {
@@ -548,7 +607,17 @@ function TvModal() {
 		if (tvImages?.logos) {
 			setLogoExists(true);
 		}
-	}, [logoExists, tvImages]);
+		if (tvCreditsResult) {
+			setMainCast(tvCreditsResult.cast.slice(0, 12));
+		}
+		if (tvDetailResult) {
+			const season =
+				tvDetailResult?.seasons[tvDetailResult?.seasons.length - 1]
+					.season_number;
+			console.log("season", season);
+			setLatestSeason(season);
+		}
+	}, [logoExists, tvImages, tvCreditsResult, tvDetailResult]);
 	const movieImageLogoExist = logoExists && tvImages;
 	console.log(reviews);
 	const sectionHeights = {
@@ -556,6 +625,13 @@ function TvModal() {
 		review: "40vh",
 		rec: "40vh",
 	};
+	console.log(
+		"sliced",
+		tvSeasonData?.episodes
+			.filter((episode) => episode.overview !== "")
+			.slice(-5)
+			.reverse()
+	);
 
 	return (
 		<>
@@ -581,7 +657,7 @@ function TvModal() {
 												)}
 											/>
 										</BigCover>
-										<BigTitle>
+										<BigTitle id={clickedTvId as string}>
 											{logoExists && tvImages?.logos?.[0] ? (
 												<img
 													src={makeMovieLogoPath(
@@ -635,10 +711,10 @@ function TvModal() {
 														: mainCast
 														? `A ${clickedMovie.genres[
 																clickedMovie.genres.length - 1
-														  ].name.toLowerCase()} movie featuring ${
-																mainCast[0].name
-														  }, ${mainCast[1].name} and more
-														`
+														  ].name.toLowerCase()} show ` +
+														  (mainCast[0] && mainCast[1]
+																? `featuring ${mainCast[0].name}, ${mainCast[1].name} and more`
+																: "")
 														: clickedMovie.name}
 												</BigTagline>
 											</div>
@@ -651,15 +727,37 @@ function TvModal() {
 												) : null}
 											</BigOverview>
 										</BigMovieHeader>
-
 										<BigMovieSection>
+											<Divider />
+											<EpisodeSectionTitle>
+												<BigMovieSectionTitle>
+													Latest Episodes
+												</BigMovieSectionTitle>
+												<span>{tvSeasonData?.name}</span>
+											</EpisodeSectionTitle>
+
+											{latestSeasonData && (
+												<EpisodeSlider
+													episodes={latestSeasonData}
+													tvId={
+														clickedTvId
+															? clickedTvId
+															: new Date().getTime().toString()
+													}
+													images={tvImages}
+												/>
+											)}
+										</BigMovieSection>
+										<BigMovieSection
+											style={{ height: mainCast?.length < 3 ? "25vh" : "40vh" }}
+										>
 											<Divider />
 
 											<BigMovieSectionTitle>Cast/Crew</BigMovieSectionTitle>
 
-											{mainCast && (
+											{newMainCast && (
 												<CastSlider
-													cast={mainCast}
+													cast={newMainCast}
 													movieId={
 														clickedTvId
 															? clickedTvId

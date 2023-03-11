@@ -57,11 +57,16 @@ const BoxImgContainer = styled(motion.div)<{
 	transform: (string | number)[];
 	logowidth: string;
 	id: string;
+	src: string;
+	noBackdrop: boolean;
 }>`
 	position: relative;
+	background-image: url(src);
 	background-size: cover;
 	background-position: center center;
 	height: 120px;
+	overflow: hidden;
+
 	&::after {
 		content: "";
 		position: absolute;
@@ -72,11 +77,13 @@ const BoxImgContainer = styled(motion.div)<{
 		background-image: linear-gradient(to top, #1f1f1f, 5%, transparent);
 	}
 
-	img:first-child {
-		max-height: 100%;
+	> img:first-child {
+		width: 100%;
+
+		object-position: center;
 	}
 	div {
-		width: 50%;
+		width: 75%;
 		height: 50%;
 		position: absolute;
 		display: flex;
@@ -98,7 +105,8 @@ const BoxImgContainer = styled(motion.div)<{
 		}
 	}
 	h2 {
-		width: 100%;
+		width: 80%;
+		font-size: 1.2rem;
 		font-family: ${(props) =>
 			Number(props.id) % 3 === 0
 				? "Oswald, sans-serif"
@@ -219,7 +227,7 @@ function InfoPopup({
 				<span>
 					{isMovieDetail(mediaItem)
 						? formatTime(mediaItem.runtime || 0)
-						: mediaItem.number_of_episodes + " episodes"}
+						: mediaItem.number_of_episodes.toLocaleString() + " episodes"}
 				</span>
 			</InfoBlock>
 			<div>
@@ -262,6 +270,12 @@ export function MovieTvBox({
 	hoveredIndex,
 	onExpandClicked,
 }: IMovieTvBox) {
+	console.log(
+		"backdrop exists",
+		mediaItem.id,
+		mediaItem,
+		!mediaItem.backdrop_path
+	);
 	return (
 		<Box
 			variants={boxVariants}
@@ -279,12 +293,14 @@ export function MovieTvBox({
 				transform={["2vh", "-2vh"]}
 				logowidth={"50%"}
 				id={mediaItem.id + ""}
+				noBackdrop={!mediaItem.backdrop_path}
+				src={makeImagePath(
+					mediaItem.backdrop_path || mediaItem.poster_path,
+					"w500"
+				)}
 			>
 				<img
-					src={makeImagePath(
-						mediaItem.backdrop_path || mediaItem.poster_path,
-						"w500"
-					)}
+					src={makeImagePath(mediaItem.backdrop_path || mediaItem.poster_path)}
 				/>
 				<div>
 					{imageData?.find((obj) => obj.id === mediaItem.id)?.logos[0] ? (

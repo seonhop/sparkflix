@@ -1,4 +1,8 @@
-import { NETFLIX_LOGO_URL } from "./consts";
+import {
+	NETFLIX_BLACK_URL,
+	NETFLIX_LOGO_BLACK_URL,
+	NETFLIX_LOGO_URL,
+} from "./consts";
 
 export function makeAvatarPath(path: string | null) {
 	const htmlUrlRegExp = /^(http|https):\/\/[^\s/$.?#].[^\s]*$/;
@@ -14,14 +18,15 @@ export function makeAvatarPath(path: string | null) {
 
 export function makeImagePath(
 	imageId: string | undefined | null,
-	format?: string
+	format?: string,
+	dark?: boolean
 ) {
 	if (imageId) {
 		return `https://image.tmdb.org/t/p/${
 			format ? format : "original"
 		}/${imageId}`;
 	}
-	return NETFLIX_LOGO_URL;
+	return NETFLIX_LOGO_BLACK_URL;
 }
 
 export function makeMovieLogoPath(

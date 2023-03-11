@@ -20,7 +20,7 @@ const SliderBtn = styled(motion.div)<{ pos: ISliderBtnPos }>`
 `;
 
 export const SliderBtnBigMovie = styled(SliderBtn)`
-	top: 15%;
+	top: 30%;
 `;
 
 const sliderBtnVariants = {
@@ -59,7 +59,7 @@ export function SliderButton({
 				transition={{ type: "tween" }}
 				pos="left"
 				onClick={() => manipulateIndex("left", maxIndex)}
-				style={{ top: inBigMovie ? "15%" : "0" }}
+				style={{ top: inBigMovie ? "20%" : "0" }}
 			>
 				<SliderBtnIcon className="material-icons">arrow_back_ios</SliderBtnIcon>
 			</SliderBtn>
