@@ -101,7 +101,12 @@ const Section = styled.div`
 		padding: 0 3.5rem;
 		z-index: 2;
 	}
-	margin-top: 25vh;
+	&:not(:nth-child(2)) {
+		margin-top: 25vh;
+	}
+	&:nth-child(2) {
+		margin-top: 10vh;
+	}
 `;
 
 function Home() {
@@ -206,6 +211,17 @@ function Home() {
 		endpoint: Endpoint.discover,
 		mediaType,
 		genre: MovieGenreIds.romance, //scorsege 1032
+		originalLanguage: "en",
+	});
+	const {
+		mediaDetails: animationDetails,
+		mediaImages: animationImages,
+		isMediaLoading: isAnimationLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		genre: MovieGenreIds.animation, //scorsege 1032
+		originalLanguage: "en",
 	});
 	useEffect(() => {
 		setIsDoneLoading(
@@ -218,7 +234,8 @@ function Home() {
 				!isRomanceLoading &&
 				!isBongLoading &&
 				!isScorseseLoading &&
-				!isParkLoading
+				!isParkLoading &&
+				!isAnimationLoading
 		);
 	}, [isFavLoading, isTRLoading, isNPLoading, isPopLoading, isQTLoading]);
 	console.log("isDoneLoading", isDoneLoading);
@@ -241,25 +258,15 @@ function Home() {
 								/>
 							</HeroTitleContainer>
 						</Hero>
-						{favImages && favDetails && (
-							<Slider
-								imageData={favImages}
-								detailData={favDetails}
-								wrapperMargin={SLIDER_MARGIN}
-								sliderType="fav"
-								inBigMovie={false}
-								mediaType="movies"
-							/>
-						)}
 
 						<>
 							<Section>
-								<h1>Popular</h1>
-								{popImages && popDetails && (
+								<h1>Recommended</h1>
+								{favImages && favDetails && (
 									<Slider
-										imageData={popImages}
-										detailData={popDetails}
-										sliderType="popular"
+										imageData={favImages}
+										detailData={favDetails}
+										sliderType="fav"
 										inBigMovie={false}
 										mediaType="movies"
 									/>
@@ -284,6 +291,18 @@ function Home() {
 										imageData={trImages}
 										detailData={trDetails}
 										sliderType="topRated"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Popular</h1>
+								{popImages && popDetails && (
+									<Slider
+										imageData={popImages}
+										detailData={popDetails}
+										sliderType="popular"
 										inBigMovie={false}
 										mediaType="movies"
 									/>
@@ -357,6 +376,18 @@ function Home() {
 										imageData={romanceImages}
 										detailData={romanceDetails}
 										sliderType="romance"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Animation</h1>
+								{animationDetails && animationImages && (
+									<Slider
+										imageData={animationImages}
+										detailData={animationDetails}
+										sliderType="animation"
 										inBigMovie={false}
 										mediaType="movies"
 									/>

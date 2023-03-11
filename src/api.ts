@@ -62,8 +62,8 @@ export function fetchData({
 	if (endpoint === "/images") {
 		url += `&include_image_language=en,null`;
 	}
-	if (mediaType === "tv" && !id) {
-		url += `&with_original_language=${country}`;
+	if ((mediaType === "tv" && !id) || originalLanguage) {
+		url += `&with_original_language=${originalLanguage}`;
 	}
 	if (genre) {
 		url += `&with_genres=${genre}`;
