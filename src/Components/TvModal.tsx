@@ -5,7 +5,6 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { favMovieDict } from "../utils/favMovies";
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { motion, useScroll } from "framer-motion";
@@ -21,15 +20,9 @@ import {
 	makeAvatarPath,
 	makeMovieLogoPath,
 } from "../utils/makePath";
-import { Endpoint, NETFLIX_LOGO_URL } from "../utils/consts";
+import { Endpoint, NETFLIX_LOGO_URL, QueryMediaType } from "../utils/consts";
 import { useQuery } from "react-query";
-import {
-	getCredits,
-	getImages,
-	getDetail,
-	getRecommends,
-	getReviews,
-} from "../api";
+import { useGetImages } from "../api";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
@@ -518,6 +511,7 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 }
 
 function TvModal() {
+	let mediaType = QueryMediaType.tv;
 	const navigate = useNavigate();
 	const onRecommendClick = (tvId: string) => {
 		console.log(tvId);
@@ -528,7 +522,13 @@ function TvModal() {
 	const clickedTvId = moviePathMatch?.params.tvId;
 	const { data: tvDetailResult } = useQuery<IGetTvDetailResult>(
 		["tvDetailResult", clickedTvId],
-		() => fetchData(Endpoint.details, "tv", Number(clickedTvId), "en")
+		() =>
+			fetchData({
+				endpoint: Endpoint.details,
+				mediaType,
+				id: Number(clickedTvId),
+				originalLanguage: "en",
+			})
 	);
 
 	console.log("detail", tvDetailResult);
@@ -538,24 +538,43 @@ function TvModal() {
 	);
 	const { data: tvImages } = useQuery<IGetMovieImagesResult>(
 		["tvImagesResult", clickedTvId],
-		() => fetchData(Endpoint.images, "tv", Number(clickedTvId), "en,cn")
+		() =>
+			fetchData({
+				endpoint: Endpoint.images,
+				mediaType,
+				id: Number(clickedTvId),
+				originalLanguage: "en, cn",
+			})
 	);
 	const totalBackdrops = tvImages?.backdrops.length;
 
 	console.log("images", tvImages);
 	const { data: tvRecommends, isLoading: isMovieRecommendsLoading } =
 		useQuery<IGetRecommendsResults>(["tvRecommendsResult", clickedTvId], () =>
-			fetchData(Endpoint.recommends, "tv", Number(clickedTvId))
+			fetchData({
+				endpoint: Endpoint.recommends,
+				mediaType,
+				id: Number(clickedTvId),
+			})
 		);
 	console.log("recommends", tvRecommends);
 	const { data: tvReviews, isLoading: isMovieReviewsLoading } =
 		useQuery<IGetReviews>(["tvReviewsResult", clickedTvId], () =>
-			fetchData(Endpoint.reviews, "tv", Number(clickedTvId))
+			fetchData({
+				endpoint: Endpoint.reviews,
+				mediaType,
+				id: Number(clickedTvId),
+			})
 		);
 	console.log("reviews", tvReviews);
 	const { data: tvCreditsResult } = useQuery<IGetCredits>(
 		["tvCreditResult", clickedTvId],
-		() => fetchData(Endpoint.credits, "tv", Number(clickedTvId))
+		() =>
+			fetchData({
+				endpoint: Endpoint.credits,
+				mediaType,
+				id: Number(clickedTvId),
+			})
 	);
 	console.log("tvCredits", tvCreditsResult);
 	const lastSeasonNumber =
@@ -565,13 +584,12 @@ function TvModal() {
 	const { data: tvSeasonData } = useQuery<IGetSeasonDetailResult>(
 		["tvEpisodeDetailResult", clickedTvId],
 		() =>
-			fetchData(
-				Endpoint.seasons,
-				"tv",
-				Number(clickedTvId),
-				undefined,
-				lastSeasonNumber
-			),
+			fetchData({
+				endpoint: Endpoint.seasons,
+				mediaType,
+				id: Number(clickedTvId),
+				seasonNum: lastSeasonNumber,
+			}),
 		{ enabled: !!tvDetailResult }
 	);
 

@@ -5,7 +5,6 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { favMovieDict } from "../utils/favMovies";
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
 import { motion, useScroll } from "framer-motion";
@@ -21,16 +20,10 @@ import {
 	makeAvatarPath,
 	makeMovieLogoPath,
 } from "../utils/makePath";
-import { NETFLIX_LOGO_URL } from "../utils/consts";
+import { Endpoint, NETFLIX_LOGO_URL, QueryMediaType } from "../utils/consts";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 import { useQuery } from "react-query";
-import {
-	getCredits,
-	getImages,
-	getDetail,
-	getRecommends,
-	getReviews,
-} from "../api";
+import { fetchData, useGetImages } from "../api";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { useState, useEffect } from "react";
 import { MidDot } from "./MidDot";
@@ -507,6 +500,7 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 }
 
 function MovieModal() {
+	let mediaType = QueryMediaType.movie;
 	const navigate = useNavigate();
 	const onRecommendClick = (movieId: string) => navigate(`/movies/${movieId}`);
 	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
@@ -514,25 +508,51 @@ function MovieModal() {
 	const clickedMovieId = moviePathMatch?.params.movieId;
 	const { data: movieDetailResult } = useQuery<IGetMovieDetailResult>(
 		["movieDetailResult", clickedMovieId],
-		() => getDetail(Number(clickedMovieId), "en")
+		() =>
+			fetchData({
+				endpoint: Endpoint.details,
+				mediaType,
+				id: Number(clickedMovieId),
+				originalLanguage: "en",
+			})
 	);
 	const { data: movieImages } = useQuery<IGetMovieImagesResult>(
 		["movieImagesResult", clickedMovieId],
-		() => getImages(Number(clickedMovieId), "en,cn")
+		() =>
+			fetchData({
+				endpoint: Endpoint.images,
+				mediaType,
+				id: Number(clickedMovieId),
+				originalLanguage: "en,cn",
+			})
 	);
 	const { data: movieRecommends, isLoading: isMovieRecommendsLoading } =
 		useQuery<IGetRecommendsResults>(
 			["movieRecommendsResult", clickedMovieId],
-			() => getRecommends(Number(clickedMovieId))
+			() =>
+				fetchData({
+					endpoint: Endpoint.recommends,
+					mediaType,
+					id: Number(clickedMovieId),
+				})
 		);
 
 	const { data: movieReviews, isLoading: isMovieReviewsLoading } =
 		useQuery<IGetReviews>(["movieReviewsResult", clickedMovieId], () =>
-			getReviews(Number(clickedMovieId))
+			fetchData({
+				endpoint: Endpoint.reviews,
+				mediaType,
+				id: Number(clickedMovieId),
+			})
 		);
 	const { data: movieCreditsResult } = useQuery<IGetCredits>(
 		["movieCreditResult", clickedMovieId],
-		() => getCredits(Number(clickedMovieId))
+		() =>
+			fetchData({
+				endpoint: Endpoint.credits,
+				mediaType,
+				id: Number(clickedMovieId),
+			})
 	);
 	let mainCast = undefined;
 	let reviews = undefined;

@@ -15,8 +15,7 @@ import { OFF_SET, SLIDER_MARGIN, NETFLIX_LOGO_URL } from "../../utils/consts";
 import { makeImagePath, makeAvatarPath } from "../../utils/makePath";
 
 import { useNavigate } from "react-router-dom";
-import { favMovieDict } from "../../utils/favMovies";
-import { favMovieIDs } from "../../utils/favMovies";
+
 import {
 	ISliderBtnPos,
 	IHeroSlider,
@@ -27,7 +26,6 @@ import { IGetMovieDetailResult } from "../../Interfaces/API/IGetDetails/IGetMovi
 import React from "react";
 import { useQuery } from "react-query";
 import { IGetVideosResult } from "../../Interfaces/API/IGetVideos";
-import { getVideos } from "../../api";
 import { MidDot } from "../MidDot";
 import { Genres } from "../Genres";
 import { ReviewResults } from "../../Interfaces/API/IGetReviews";

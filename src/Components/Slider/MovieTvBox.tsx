@@ -269,12 +269,6 @@ export function MovieTvBox({
 	hoveredIndex,
 	onExpandClicked,
 }: IMovieTvBox) {
-	console.log(
-		"backdrop exists",
-		mediaItem.id,
-		mediaItem,
-		!mediaItem.backdrop_path
-	);
 	return (
 		<Box
 			variants={boxVariants}

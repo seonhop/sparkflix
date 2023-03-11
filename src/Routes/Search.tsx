@@ -1,11 +1,12 @@
 import { useLocation } from "react-router-dom";
-import { getSearchResults, getImages, getDetail } from "../api";
+import { getSearchResults, useGetImages, fetchData } from "../api";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import { IGetSearchResults } from "../Interfaces/API/IGetSearchResults";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
+import { Endpoint } from "../utils/consts";
 
 const SearchContainer = styled.div`
 	display: flex;
@@ -52,8 +53,14 @@ function Search() {
 			const movies = data?.results.filter((movie) => movie.id) ?? [];
 			console.log("movies..., ", movies);
 			const promises = movies.map((movie) =>
-				getDetail(movie.id, movie.original_language)
+				fetchData({
+					endpoint: Endpoint.details,
+					mediaType: undefined,
+					id: movie.id,
+					originalLanguage: movie.original_language,
+				})
 			);
+
 			console.log("logging...", promises);
 			const images = await Promise.all(promises);
 			return images.flat();

@@ -1,16 +1,40 @@
+import { useQuery } from "react-query";
+import { IGetMovieDetailResult } from "./Interfaces/API/IGetDetails/IGetMovieDetail";
+import { IGetMovieImagesResult } from "./Interfaces/API/IGetImages";
+import { IGetResult } from "./Interfaces/API/IGetResults";
+import { Endpoint, IFavMovie, QueryMediaType } from "./utils/consts";
+
 export const API_KEY = "3a80f7f28c20df567800b2cbc5e55a54";
 export const BASE_PATH = "https://api.themoviedb.org/3";
 
-export function fetchData(
-	endpoint: string,
-	mediaType: "movie" | "tv",
-	id?: number,
-	originalLanguage?: string,
-	seasonNum?: number,
-	genre?: string,
-	originalCountry?: string
-) {
-	let url = `${BASE_PATH}/${mediaType}`;
+interface IFetchData {
+	endpoint: string;
+	mediaType?: QueryMediaType.movie | QueryMediaType.tv;
+	id?: number;
+	originalLanguage?: string;
+	seasonNum?: number;
+	genre?: string;
+	originalCountry?: string;
+	people?: string;
+}
+
+export function fetchData({
+	endpoint,
+	mediaType,
+	id,
+	originalLanguage,
+	seasonNum,
+	genre,
+	originalCountry,
+	people,
+}: IFetchData) {
+	let url = `${BASE_PATH}`;
+	if (endpoint === Endpoint.discover) {
+		url += `${endpoint}/${mediaType}`;
+	} else {
+		url += `/${mediaType}`;
+	}
+
 	let language = "en";
 	let country = "en";
 	let defaultSeasonNum = 1;
@@ -27,14 +51,14 @@ export function fetchData(
 	if (seasonNum) {
 		defaultSeasonNum = seasonNum;
 	}
-	console.log(endpoint, endpoint.includes("{season_num}"));
 
 	if (endpoint.includes("{season_num}")) {
 		endpoint = endpoint.replace("{season_num}", defaultSeasonNum + "");
 	}
-	console.log(endpoint, endpoint.includes("{season_num}"));
-
-	url += `${endpoint}?api_key=${API_KEY}&language=en`;
+	if (endpoint !== Endpoint.discover) {
+		url += `${endpoint}`;
+	}
+	url += `?api_key=${API_KEY}&language=en`;
 	if (endpoint === "/images") {
 		url += `&include_image_language=en,null`;
 	}
@@ -44,98 +68,163 @@ export function fetchData(
 	if (genre) {
 		url += `&with_genres=${genre}`;
 	}
+	if (people) {
+		url += `&with_people=${people}`;
+	}
+	if (genre || people) {
+		url += `&sort_by=popularity.desc&include_adult=${false}`;
+	}
 
-	console.log("api url", url);
+	console.log("api url", endpoint, url);
 	return fetch(url).then((response) => response.json());
 }
 
-export function getData(mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/top_rated?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
+interface IGetDetails {
+	mediaList: IGetResult | IFavMovie | undefined;
+	endpoint: string;
+	mediaType: QueryMediaType.movie | QueryMediaType.tv | undefined;
+	enabled?: IGetResult;
 }
 
-export function getPopular(mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/popular?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
+export const useGetDetails = ({
+	endpoint,
+	mediaList,
+	mediaType,
+}: IGetDetails) => {
+	const { data, isLoading } = useQuery<IGetMovieDetailResult[]>(
+		[endpoint, mediaType, "details"],
+		async () => {
+			if (!mediaList) {
+				return [];
+			}
+			const promises =
+				mediaList &&
+				mediaList?.results.map((media) =>
+					fetchData({
+						endpoint: Endpoint.details,
+						mediaType,
+						id: media.id,
+						originalLanguage: media.original_language,
+					})
+				);
+			return Promise.all(promises);
+		}
+	);
+	return { data, isLoading };
+};
 
-export function getTopRated(mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/top_rated?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
+export const useGetImages = ({
+	endpoint,
+	mediaList,
+	mediaType,
+}: IGetDetails) => {
+	const { data, isLoading } = useQuery<IGetMovieImagesResult[]>(
+		[endpoint, mediaType, "images"],
+		async () => {
+			if (!mediaList) {
+				return [];
+			}
+			const promises =
+				mediaList &&
+				mediaList?.results.map((media) =>
+					fetchData({
+						endpoint: Endpoint.images,
+						mediaType,
+						id: media.id,
+						originalLanguage: media.original_language,
+					})
+				);
+			return Promise.all(promises);
+		}
+	);
+	return { data, isLoading };
+};
 
-//clear
-export function getNowPlaying() {
-	return fetch(
-		`${BASE_PATH}/movie/now_playing?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
+export const useGetMedia = ({
+	endpoint,
+	mediaType,
+	id,
+	originalLanguage,
+	seasonNum,
+	genre,
+	originalCountry,
+	people,
+}: IFetchData) => {
+	const type = mediaType ?? "movie or tv";
+	const { data: mediaList } = useQuery<IGetResult>(
+		[endpoint, type, people, genre, "data"],
+		() =>
+			fetchData({
+				endpoint,
+				mediaType,
+				id,
+				originalLanguage,
+				seasonNum,
+				genre,
+				originalCountry,
+				people,
+			})
+	);
+	console.log(endpoint, "mediaList", mediaList);
 
-//clear
-export function getAiringToday() {
-	return fetch(
-		`${BASE_PATH}/tv/airing_today?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
+	const { data: mediaDetails, isLoading: mediaDetailsLoading } = useQuery<
+		IGetMovieDetailResult[]
+	>(
+		[endpoint, type, people, genre, "details"],
+		async () => {
+			if (!mediaList) {
+				return [];
+			}
+			const promises =
+				mediaList &&
+				mediaList?.results.map((media) =>
+					fetchData({
+						endpoint: Endpoint.details,
+						mediaType,
+						id: media.id,
+						originalLanguage: media.original_language,
+					})
+				);
+			return Promise.all(promises);
+		},
+		{
+			enabled: !!mediaList,
+		}
+	);
 
-//clear
-export function getOnTheAir() {
-	return fetch(
-		`${BASE_PATH}/tv/on_the_air?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
+	const { data: mediaImages, isLoading: mediaImagesLoading } = useQuery<
+		IGetMovieImagesResult[]
+	>(
+		[endpoint + people + genre, type, "images"],
+		async () => {
+			if (!mediaList) {
+				return [];
+			}
+			const promises =
+				mediaList &&
+				mediaList?.results.map((media) =>
+					fetchData({
+						endpoint: Endpoint.images,
+						mediaType,
+						id: media.id,
+						originalLanguage: media.original_language,
+					})
+				);
+			return Promise.all(promises);
+		},
+		{
+			enabled: !!mediaList,
+		}
+	);
+	const isMediaLoading = mediaDetailsLoading || mediaImagesLoading;
 
-//clear
-export function getRecommends(id: number, mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/${id}/recommendations?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
-
-export function getVideos(id: number, mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/${id}/videos?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
-
-//clear
-export function getImages(
-	id: number,
-	original_language: string,
-	mediaType?: string
-) {
-	return fetch(
-		`${BASE_PATH}/movie/${id}/images?api_key=${API_KEY}&language=${original_language}&include_image_language=null,${original_language}`
-	).then((response) => response.json());
-}
-
-//clear
-export function getCredits(id: number, mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/${id}/credits?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
-
-//clear
-export function getReviews(id: number, mediaType?: string) {
-	return fetch(
-		`${BASE_PATH}/movie/${id}/reviews?api_key=${API_KEY}&language=en-US`
-	).then((response) => response.json());
-}
-
-//clear
-export function getDetail(
-	id: number,
-	original_language: string,
-	mediaType?: string
-) {
-	const url = `${BASE_PATH}/movie/${id}?api_key=${API_KEY}&language=${original_language}`;
-	console.log("detail", url);
-	return fetch(url).then((response) => response.json());
-}
+	return {
+		mediaList,
+		mediaDetails,
+		mediaImages,
+		isMediaLoading,
+	};
+};
 
 export function getSearchResults(query: string) {
 	return fetch(

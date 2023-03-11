@@ -1,21 +1,12 @@
 import styled from "styled-components";
 import { useQuery } from "react-query";
-import {
-	getData,
-	getDetail,
-	getImages,
-	getPopular,
-	getNowPlaying,
-	getTopRated,
-	fetchData,
-} from "../api";
+import { fetchData, useGetMedia, useGetDetails, useGetImages } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
-import { favMovieIDs, favMovieDict } from "../utils/favMovies";
 import {
 	Outlet,
 	useNavigate,
@@ -28,11 +19,14 @@ import {
 	HERO_ID as HERO_ID,
 	SLIDER_MARGIN,
 	Endpoint,
+	MovieGenreIds,
+	QueryMediaType,
 } from "../utils/consts";
 import { Slider } from "../Components/Slider/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
 import { heroDataParams } from "../utils/dataParams";
+import { favMovies } from "../utils/consts";
 
 const Container = styled.div`
 	display: flex;
@@ -115,191 +109,120 @@ function Home() {
 	const onHeroClick = () => {
 		navigate(`/movies/${HERO_ID}`);
 	};
+	let mediaType = QueryMediaType.movie;
 	const [isDoneLoading, setIsDoneLoading] = useState(false);
 	const { data: heroImage, isLoading: heroImageLoading } =
 		useQuery<IGetMovieImagesResult>(["heroImage", HERO_ID], () =>
-			fetchData(Endpoint.images, "movie", HERO_ID)
+			fetchData({ endpoint: Endpoint.images, mediaType, id: HERO_ID })
 		);
-	const favMovies = favMovieIDs;
-	const { data: favDetails, isLoading: favDetailsloading } = useQuery<
-		IGetMovieDetailResult[]
-	>(["fav", "movie", "details"], async () => {
-		if (!favMovies) {
-			return [];
-		}
-		const promises =
-			favMovies &&
-			favMovies.map((movie) =>
-				fetchData(Endpoint.details, "movie", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	const { data: favDetails, isLoading: favDetailsLoading } = useGetDetails({
+		endpoint: "fav",
+		mediaList: favMovies,
+		mediaType,
 	});
-	const { data: favImages, isLoading: favImagesLoading } = useQuery<
-		IGetMovieImagesResult[]
-	>(["fav", "movie", "images"], async () => {
-		if (!favMovies) {
-			return [];
-		}
-		const promises =
-			favMovies &&
-			favMovies.map((movie) =>
-				fetchData(Endpoint.images, "movie", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	const { data: favImages, isLoading: favImagesLoading } = useGetImages({
+		endpoint: "fav",
+		mediaList: favMovies,
+		mediaType,
 	});
+	const isFavLoading = favDetailsLoading || favImagesLoading;
 
-	const { data: popularMovies } = useQuery<IGetResult>(
-		["popular", "movie", "data"],
-		() => fetchData(Endpoint.popular, "movie")
-	);
-	const { data: popularDetails, isLoading: popularDetailsloading } = useQuery<
-		IGetMovieDetailResult[]
-	>(["popular", "movie", "details"], async () => {
-		if (!popularMovies) {
-			return [];
-		}
-		const promises =
-			popularMovies &&
-			popularMovies?.results.map((movie) =>
-				fetchData(Endpoint.details, "movie", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
-	});
-	const { data: popularImages, isLoading: popularImagesLoading } = useQuery<
-		IGetMovieImagesResult[]
-	>(["popular", "movie", "images"], async () => {
-		if (!popularMovies) {
-			return [];
-		}
-		const promises =
-			popularMovies &&
-			popularMovies?.results.map((movie) =>
-				fetchData(Endpoint.images, "movie", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
-	});
-
-	const { data: topRatedMovies } = useQuery<IGetResult>(
-		["topRated", "movie", "data"],
-		() => fetchData(Endpoint.topRated, "movie")
-	);
-	const { data: topRatedDetails, isLoading: topRatedDetailsloading } = useQuery<
-		IGetMovieDetailResult[]
-	>(["topRated", "movie", "details"], async () => {
-		if (!topRatedMovies) {
-			return [];
-		}
-		const promises =
-			topRatedMovies &&
-			topRatedMovies?.results.map((movie) =>
-				fetchData(Endpoint.details, "movie", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
-	});
-	const { data: topRatedImages, isLoading: topRatedImagesLoading } = useQuery<
-		IGetMovieImagesResult[]
-	>(["topRated", "movie", "images"], async () => {
-		if (!topRatedMovies) {
-			return [];
-		}
-		const promises =
-			topRatedMovies &&
-			topRatedMovies?.results.map((movie) =>
-				fetchData(Endpoint.images, "movie", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
-	});
-
-	const { data: nowPlayingMovies } = useQuery<IGetResult>(
-		["nowPlaying", "movie", "data"],
-		() => fetchData(Endpoint.nowPlaying, "movie")
-	);
-	const { data: nowPlayingDetails, isLoading: nowPlayingDetailsLoading } =
-		useQuery<IGetMovieDetailResult[]>(
-			["nowPlaying", "movie", "details"],
-			async () => {
-				if (!nowPlayingMovies) {
-					return [];
-				}
-				const promises =
-					nowPlayingMovies &&
-					nowPlayingMovies?.results.map((movie) =>
-						fetchData(
-							Endpoint.details,
-							"movie",
-							movie.id,
-							movie.original_language
-						)
-					);
-				return Promise.all(promises);
-			}
-		);
-	const { data: nowPlayingImages, isLoading: nowPlayingImagesLoading } =
-		useQuery<IGetMovieImagesResult[]>(
-			["nowPlaying", "movie", "images"],
-			async () => {
-				if (!nowPlayingMovies) {
-					return [];
-				}
-				const promises =
-					nowPlayingMovies &&
-					nowPlayingMovies?.results.map((movie) =>
-						fetchData(
-							Endpoint.images,
-							"movie",
-							movie.id,
-							movie.original_language
-						)
-					);
-				return Promise.all(promises);
-			}
-		);
-	const isNowPlayingLoading =
-		nowPlayingDetailsLoading || nowPlayingImagesLoading;
-	const isPopularLoading = popularDetailsloading || popularImagesLoading;
-	const isTopRatedLoading = topRatedDetailsloading || topRatedImagesLoading;
-	const isHeroLoading = favDetailsloading || favImagesLoading;
-
-	/*
-		const {
-		images: favImages,
-		details: favDetails,
-		isLoading: isHeroLoading,
-	} = useQueryParams({
-		...heroDataParams,
+	const {
+		mediaDetails: trDetails,
+		mediaImages: trImages,
+		isMediaLoading: isTRLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.topRated,
+		mediaType,
 	});
 	const {
-		images: nowPlayingImages,
-		details: nowPlayingDetails,
-		isLoading: isNowPlayingLoading,
-	} = useQueryParams({
-		...nowPlayingDataParams,
+		mediaDetails: npDetails,
+		mediaImages: npImages,
+		isMediaLoading: isNPLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.nowPlaying,
+		mediaType,
 	});
 	const {
-		images: topRatedImages,
-		details: topRatedDetails,
-		isLoading: isTopRatedLoading,
-	} = useQueryParams({
-		...topRatedDataParams,
+		mediaDetails: popDetails,
+		mediaImages: popImages,
+		isMediaLoading: isPopLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.popular,
+		mediaType,
 	});
-	const {
-		images: popularImages,
-		details: popularDetails,
-		isLoading: isPopularLoading,
-	} = useQueryParams({
-		...popularDataParams,
-	});
-	
-	*/
 
+	// tarantino = 138
+	const {
+		mediaDetails: tarantinoDetails,
+		mediaImages: tarantinoImages,
+		isMediaLoading: isQTLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		people: "138",
+	});
+	const {
+		mediaDetails: bongDetails,
+		mediaImages: bongImages,
+		isMediaLoading: isBongLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		people: "21684",
+	});
+	const {
+		mediaDetails: scorseseDetails,
+		mediaImages: scorseseImages,
+		isMediaLoading: isScorseseLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		people: "1032",
+	});
+	const {
+		mediaDetails: parkDetails,
+		mediaImages: parkImages,
+		isMediaLoading: isParkLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		people: "10099",
+	});
+	const {
+		mediaDetails: comedyDetails,
+		mediaImages: comedyImages,
+		isMediaLoading: isComedyLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		genre: MovieGenreIds.comedy, //scorsege 1032 bong joon-ho 21684 park 10099
+	});
+	const {
+		mediaDetails: romanceDetails,
+		mediaImages: romanceImages,
+		isMediaLoading: isRomanceLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		genre: MovieGenreIds.romance, //scorsege 1032
+	});
 	useEffect(() => {
 		setIsDoneLoading(
-			!isHeroLoading ||
-				!isNowPlayingLoading ||
-				!isTopRatedLoading ||
-				!isPopularLoading
+			!isFavLoading &&
+				!isTRLoading &&
+				!isNPLoading &&
+				!isPopLoading &&
+				!isQTLoading &&
+				!isComedyLoading &&
+				!isRomanceLoading &&
+				!isBongLoading &&
+				!isScorseseLoading &&
+				!isParkLoading
 		);
-	}, [isHeroLoading, isNowPlayingLoading, isTopRatedLoading, isPopularLoading]);
+	}, [isFavLoading, isTRLoading, isNPLoading, isPopLoading, isQTLoading]);
+	console.log("isDoneLoading", isDoneLoading);
+	console.log("QT", tarantinoDetails, tarantinoImages);
 	return (
 		<Container>
 			{heroImageLoading && !isDoneLoading ? (
@@ -318,23 +241,24 @@ function Home() {
 								/>
 							</HeroTitleContainer>
 						</Hero>
-
-						<Slider
-							imageData={favImages}
-							detailData={favDetails}
-							wrapperMargin={SLIDER_MARGIN}
-							sliderType="fav"
-							inBigMovie={false}
-							mediaType="movies"
-						/>
+						{favImages && favDetails && (
+							<Slider
+								imageData={favImages}
+								detailData={favDetails}
+								wrapperMargin={SLIDER_MARGIN}
+								sliderType="fav"
+								inBigMovie={false}
+								mediaType="movies"
+							/>
+						)}
 
 						<>
 							<Section>
 								<h1>Popular</h1>
-								{popularImages && popularDetails && (
+								{popImages && popDetails && (
 									<Slider
-										imageData={popularImages}
-										detailData={popularDetails}
+										imageData={popImages}
+										detailData={popDetails}
 										sliderType="popular"
 										inBigMovie={false}
 										mediaType="movies"
@@ -343,10 +267,10 @@ function Home() {
 							</Section>
 							<Section>
 								<h1>Now Playing</h1>
-								{nowPlayingImages && nowPlayingDetails && (
+								{npImages && npDetails && (
 									<Slider
-										imageData={nowPlayingImages}
-										detailData={nowPlayingDetails}
+										imageData={npImages}
+										detailData={npDetails}
 										sliderType="nowPlaying"
 										inBigMovie={false}
 										mediaType="movies"
@@ -355,11 +279,84 @@ function Home() {
 							</Section>
 							<Section>
 								<h1>Top Rated</h1>
-								{topRatedDetails && topRatedImages && (
+								{trDetails && trImages && (
 									<Slider
-										imageData={topRatedImages}
-										detailData={topRatedDetails}
+										imageData={trImages}
+										detailData={trDetails}
 										sliderType="topRated"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+
+							<Section>
+								<h1>Tarantino's</h1>
+								{tarantinoDetails && tarantinoImages && (
+									<Slider
+										imageData={tarantinoImages}
+										detailData={tarantinoDetails}
+										sliderType="tarantino"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Scorsese's</h1>
+								{scorseseDetails && scorseseImages && (
+									<Slider
+										imageData={scorseseImages}
+										detailData={scorseseDetails}
+										sliderType="scorsese"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Bong Joon-ho's</h1>
+								{bongDetails && bongImages && (
+									<Slider
+										imageData={bongImages}
+										detailData={bongDetails}
+										sliderType="bong"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Park Chan-wook's</h1>
+								{parkDetails && parkImages && (
+									<Slider
+										imageData={parkImages}
+										detailData={parkDetails}
+										sliderType="park"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Comedy</h1>
+								{comedyDetails && comedyImages && (
+									<Slider
+										imageData={comedyImages}
+										detailData={comedyDetails}
+										sliderType="comedy"
+										inBigMovie={false}
+										mediaType="movies"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Romance</h1>
+								{romanceDetails && romanceImages && (
+									<Slider
+										imageData={romanceImages}
+										detailData={romanceDetails}
+										sliderType="romance"
 										inBigMovie={false}
 										mediaType="movies"
 									/>

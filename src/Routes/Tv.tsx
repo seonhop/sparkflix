@@ -1,21 +1,12 @@
 import styled from "styled-components";
 import { useQuery } from "react-query";
-import {
-	getData,
-	getDetail,
-	getImages,
-	getPopular,
-	getNowPlaying,
-	getTopRated,
-	fetchData,
-} from "../api";
+import { fetchData } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IGetTvDetailResult } from "../Interfaces/API/IGetDetails/IGetTvDetails";
-import { favMovieIDs, favMovieDict } from "../utils/favMovies";
 import {
 	Outlet,
 	useNavigate,
@@ -104,7 +95,13 @@ const TvBody = styled.div`
 `;
 
 function Tv() {
-	const navigate = useNavigate();
+	return <div>hi</div>;
+}
+
+export default Tv;
+
+/* 
+const navigate = useNavigate();
 	const onHeroClick = () => {
 		navigate(`/tv/${HERO_TV_ID}`);
 	};
@@ -255,37 +252,6 @@ function Tv() {
 	const isTopRatedLoading = topRatedDetailsloading || topRatedImagesLoading;
 	const isHeroLoading = favDetailsloading || favImagesLoading;
 
-	/*
-		const {
-		images: favImages,
-		details: favDetails,
-		isLoading: isHeroLoading,
-	} = useQueryParams({
-		...heroDataParams,
-	});
-	const {
-		images: nowPlayingImages,
-		details: nowPlayingDetails,
-		isLoading: isNowPlayingLoading,
-	} = useQueryParams({
-		...nowPlayingDataParams,
-	});
-	const {
-		images: topRatedImages,
-		details: topRatedDetails,
-		isLoading: isTopRatedLoading,
-	} = useQueryParams({
-		...topRatedDataParams,
-	});
-	const {
-		images: popularImages,
-		details: popularDetails,
-		isLoading: isPopularLoading,
-	} = useQueryParams({
-		...popularDataParams,
-	});
-	
-	*/
 
 	useEffect(() => {
 		setIsDoneLoading(
@@ -368,4 +334,6 @@ function Tv() {
 	);
 }
 
-export default Tv;
+
+
+*/

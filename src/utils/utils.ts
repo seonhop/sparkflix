@@ -1,6 +1,4 @@
 import { useQuery, QueryOptions } from "react-query";
-import { fetchData, getImages, getDetail } from "../api";
-import { favMovieIDs, IFavMovieIDs } from "./favMovies";
 import { IGetResult } from "../Interfaces/API/IGetResults";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
