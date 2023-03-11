@@ -63,7 +63,7 @@ export function fetchData({
 		url += `&include_image_language=en,null`;
 	}
 	if ((mediaType === "tv" && !id) || originalLanguage) {
-		url += `&with_original_language=${originalLanguage}`;
+		url += `&with_original_language=${language}`;
 	}
 	if (genre) {
 		url += `&with_genres=${genre}`;
@@ -152,7 +152,17 @@ export const useGetMedia = ({
 }: IFetchData) => {
 	const type = mediaType ?? "movie or tv";
 	const { data: mediaList } = useQuery<IGetResult>(
-		[endpoint, type, people, genre, "data"],
+		[
+			endpoint,
+			mediaType,
+			id,
+			originalLanguage,
+			seasonNum,
+			genre,
+			originalCountry,
+			people,
+			"data",
+		],
 		() =>
 			fetchData({
 				endpoint,
@@ -170,7 +180,17 @@ export const useGetMedia = ({
 	const { data: mediaDetails, isLoading: mediaDetailsLoading } = useQuery<
 		IGetMovieDetailResult[]
 	>(
-		[endpoint, type, people, genre, "details"],
+		[
+			endpoint,
+			mediaType,
+			id,
+			originalLanguage,
+			seasonNum,
+			genre,
+			originalCountry,
+			people,
+			"details",
+		],
 		async () => {
 			if (!mediaList) {
 				return [];
@@ -195,7 +215,18 @@ export const useGetMedia = ({
 	const { data: mediaImages, isLoading: mediaImagesLoading } = useQuery<
 		IGetMovieImagesResult[]
 	>(
-		[endpoint + people + genre, type, "images"],
+		[
+			endpoint,
+			mediaType,
+			id,
+			originalLanguage,
+			seasonNum,
+			genre,
+			originalCountry,
+			people,
+			,
+			"images",
+		],
 		async () => {
 			if (!mediaList) {
 				return [];

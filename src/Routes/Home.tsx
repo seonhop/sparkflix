@@ -109,6 +109,42 @@ const Section = styled.div`
 	}
 `;
 
+const HeroButtonContainer = styled.div`
+	display: grid;
+	width: 100%;
+	justify-content: space-between;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+	margin-top: 3vh;
+	div {
+		display: flex;
+		padding: 12px 16px;
+		border-radius: 8px;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+		background-color: rgba(255, 255, 255, 1);
+		color: ${(props) => props.theme.black.darker};
+		:hover {
+			background-color: rgb(222, 222, 222);
+			cursor: pointer;
+		}
+		> span:first-child {
+			font-size: 2rem;
+		}
+		> span:last-child {
+			font-size: 1.2rem;
+		}
+		&:last-child {
+			background-color: rgba(0, 0, 0, 0.4);
+			color: ${(props) => props.theme.white.lighter};
+			:hover {
+				background-color: rgba(0, 0, 0, 0.7);
+			}
+		}
+	}
+`;
+
 function Home() {
 	const navigate = useNavigate();
 	const onHeroClick = () => {
@@ -250,12 +286,22 @@ function Home() {
 					<>
 						<Hero
 							bgPhoto={makeImagePath(heroImage?.backdrops[7].file_path || "")}
-							onClick={onHeroClick}
 						>
 							<HeroTitleContainer>
 								<HeroTitle
 									src={makeImagePath(heroImage?.logos[0].file_path || "")}
 								/>
+								<HeroButtonContainer>
+									<div>
+										<span className="material-icons-round">play_arrow</span>
+
+										<span>Play</span>
+									</div>
+									<div onClick={onHeroClick}>
+										<span className="material-icons-outlined">info</span>{" "}
+										<span>Info</span>
+									</div>
+								</HeroButtonContainer>
 							</HeroTitleContainer>
 						</Hero>
 

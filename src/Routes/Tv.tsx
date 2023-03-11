@@ -1,12 +1,12 @@
 import styled from "styled-components";
 import { useQuery } from "react-query";
-import { fetchData } from "../api";
+import { fetchData, useGetMedia, useGetDetails, useGetImages } from "../api";
 import { IGetMoviesResult } from "../Interfaces/API/IGetMovies";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
-import { IGetTvDetailResult } from "../Interfaces/API/IGetDetails/IGetTvDetails";
+import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
 import {
 	Outlet,
 	useNavigate,
@@ -14,11 +14,21 @@ import {
 	PathMatch,
 	useOutletContext,
 } from "react-router-dom";
-import { OFF_SET, HERO_TV_ID, SLIDER_MARGIN, Endpoint } from "../utils/consts";
+import {
+	OFF_SET,
+	HERO_ID as HERO_ID,
+	SLIDER_MARGIN,
+	Endpoint,
+	MovieGenreIds,
+	QueryMediaType,
+	HERO_TV_ID,
+	TvGenreIds,
+} from "../utils/consts";
 import { Slider } from "../Components/Slider/Slider";
 import { dir } from "console";
 import { IGetResult } from "../Interfaces/API/IGetResults";
 import { heroDataParams } from "../utils/dataParams";
+import { favMovies } from "../utils/consts";
 
 const Container = styled.div`
 	display: flex;
@@ -58,7 +68,15 @@ const Hero = styled.div<{ bgPhoto: string }>`
 			transparent 90%,
 			rgba(28, 28, 28, 0.8) 100%
 		),
-		linear-gradient(to bottom, transparent 90%, black 100%),
+		linear-gradient(
+			to bottom,
+			transparent 90%,
+			#0c0c0c 100%,
+			#111 98%,
+			#222 96%,
+			#333 94%,
+			#555 92%
+		),
 		url(${(props) => props.bgPhoto});
 	background-size: cover;
 	box-shadow: 0 0 40px 20px black;
@@ -76,7 +94,6 @@ const HeroTitle = styled.img`
 `;
 
 const Section = styled.div`
-	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
@@ -84,183 +101,142 @@ const Section = styled.div`
 		font-size: 1.4rem;
 		font-weight: 500;
 		padding: 0 3.5rem;
+		z-index: 2;
 	}
-	margin-top: 25vh;
+	&:not(:nth-child(2)) {
+		margin-top: 25vh;
+	}
+	&:nth-child(2) {
+		margin-top: 10vh;
+	}
 `;
 
-const TvBody = styled.div`
-	position: relative;
-	display: flex;
-	flex-direction: column;
+const HeroButtonContainer = styled.div`
+	display: grid;
+	width: 100%;
+	justify-content: space-between;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+	margin-top: 3vh;
+	div {
+		display: flex;
+		padding: 12px 16px;
+		border-radius: 8px;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+		background-color: rgba(255, 255, 255, 1);
+		color: ${(props) => props.theme.black.darker};
+		:hover {
+			background-color: rgb(222, 222, 222);
+			cursor: pointer;
+		}
+		> span:first-child {
+			font-size: 2rem;
+		}
+		> span:last-child {
+			font-size: 1.2rem;
+		}
+		&:last-child {
+			background-color: rgba(0, 0, 0, 0.4);
+			color: ${(props) => props.theme.white.lighter};
+			:hover {
+				background-color: rgba(0, 0, 0, 0.7);
+			}
+		}
+	}
 `;
 
 function Tv() {
-	return <div>hi</div>;
-}
+	let mediaType = QueryMediaType.tv;
 
-export default Tv;
-
-/* 
-const navigate = useNavigate();
+	const navigate = useNavigate();
 	const onHeroClick = () => {
-		navigate(`/tv/${HERO_TV_ID}`);
+		navigate(`/${mediaType}/${HERO_TV_ID}`);
 	};
 	const [isDoneLoading, setIsDoneLoading] = useState(false);
 	const { data: heroImage, isLoading: heroImageLoading } =
 		useQuery<IGetMovieImagesResult>(["heroImage", HERO_TV_ID], () =>
-			fetchData(Endpoint.images, "tv", HERO_TV_ID)
+			fetchData({ endpoint: Endpoint.images, mediaType, id: HERO_TV_ID })
 		);
-	const { data: favMovies, isLoading: favMovieLoading } = useQuery<IGetResult>(
-		["fav", "tv"],
-		() =>
-			fetchData(
-				Endpoint.popular,
-				"tv",
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				"ko"
-			)
-	);
-	const { data: favDetails, isLoading: favDetailsloading } = useQuery<
-		IGetTvDetailResult[]
-	>(["fav", "tv", "details"], async () => {
-		if (!favMovies) {
-			return [];
-		}
-		const promises =
-			favMovies &&
-			favMovies?.results.map((movie) =>
-				fetchData(Endpoint.details, "tv", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
-	});
-	const { data: favImages, isLoading: favImagesLoading } = useQuery<
-		IGetMovieImagesResult[]
-	>(["fav", "tv", "images"], async () => {
-		if (!favMovies) {
-			return [];
-		}
-		const promises =
-			favMovies &&
-			favMovies.results.map((movie) =>
-				fetchData(Endpoint.images, "tv", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	console.log("heroimage", heroImage);
+	const {
+		mediaDetails: favDetails,
+		mediaImages: favImages,
+		isMediaLoading: favLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.popular,
+		mediaType,
+		originalLanguage: "ko",
 	});
 
-	const { data: popularMovies } = useQuery<IGetResult>(
-		["popular", "tv", "data"],
-		() => fetchData(Endpoint.popular, "tv")
-	);
-	const { data: popularDetails, isLoading: popularDetailsloading } = useQuery<
-		IGetTvDetailResult[]
-	>(["popular", "tv", "details"], async () => {
-		if (!popularMovies) {
-			return [];
-		}
-		const promises =
-			popularMovies &&
-			popularMovies?.results.map((movie) =>
-				fetchData(Endpoint.details, "tv", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	const {
+		mediaDetails: trDetails,
+		mediaImages: trImages,
+		isMediaLoading: trLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.topRated,
+		mediaType,
 	});
-	const { data: popularImages, isLoading: popularImagesLoading } = useQuery<
-		IGetMovieImagesResult[]
-	>(["popular", "tv", "images"], async () => {
-		if (!popularMovies) {
-			return [];
-		}
-		const promises =
-			popularMovies &&
-			popularMovies?.results.map((movie) =>
-				fetchData(Endpoint.images, "tv", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	console.log("tv tr", trDetails);
+	const {
+		mediaDetails: onAirDetails,
+		mediaImages: onAirImages,
+		isMediaLoading: onAirLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.airingToday,
+		mediaType,
+	});
+	const {
+		mediaDetails: popDetails,
+		mediaImages: popImages,
+		isMediaLoading: popLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.popular,
+		mediaType,
 	});
 
-	const { data: topRatedMovies } = useQuery<IGetResult>(
-		["topRated", "tv", "data"],
-		() => fetchData(Endpoint.topRated, "tv")
-	);
-	const { data: topRatedDetails, isLoading: topRatedDetailsloading } = useQuery<
-		IGetTvDetailResult[]
-	>(["topRated", "tv", "details"], async () => {
-		if (!topRatedMovies) {
-			return [];
-		}
-		const promises =
-			topRatedMovies &&
-			topRatedMovies?.results.map((movie) =>
-				fetchData(Endpoint.details, "tv", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	const {
+		mediaDetails: comedyDetails,
+		mediaImages: comedyImages,
+		isMediaLoading: comedyLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		genre: TvGenreIds.comedy, //scorsege 1032 bong joon-ho 21684 park 10099
 	});
-	const { data: topRatedImages, isLoading: topRatedImagesLoading } = useQuery<
-		IGetMovieImagesResult[]
-	>(["topRated", "tv", "images"], async () => {
-		if (!topRatedMovies) {
-			return [];
-		}
-		const promises =
-			topRatedMovies &&
-			topRatedMovies?.results.map((movie) =>
-				fetchData(Endpoint.images, "tv", movie.id, movie.original_language)
-			);
-		return Promise.all(promises);
+	const {
+		mediaDetails: talkDetails,
+		mediaImages: talkImages,
+		isMediaLoading: talkLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		genre: TvGenreIds.talk, //scorsege 1032
+		originalLanguage: "en",
 	});
-
-	const { data: nowPlayingMovies } = useQuery<IGetResult>(
-		["nowPlaying", "tv", "data"],
-		() => fetchData(Endpoint.airingToday, "tv")
-	);
-	const { data: nowPlayingDetails, isLoading: nowPlayingDetailsLoading } =
-		useQuery<IGetTvDetailResult[]>(
-			["nowPlaying", "tv", "details"],
-			async () => {
-				if (!nowPlayingMovies) {
-					return [];
-				}
-				const promises =
-					nowPlayingMovies &&
-					nowPlayingMovies?.results.map((movie) =>
-						fetchData(Endpoint.details, "tv", movie.id, movie.original_language)
-					);
-				return Promise.all(promises);
-			}
-		);
-	const { data: nowPlayingImages, isLoading: nowPlayingImagesLoading } =
-		useQuery<IGetMovieImagesResult[]>(
-			["nowPlaying", "tv", "images"],
-			async () => {
-				if (!nowPlayingMovies) {
-					return [];
-				}
-				const promises =
-					nowPlayingMovies &&
-					nowPlayingMovies?.results.map((movie) =>
-						fetchData(Endpoint.images, "tv", movie.id, movie.original_language)
-					);
-				return Promise.all(promises);
-			}
-		);
-	const isNowPlayingLoading =
-		nowPlayingDetailsLoading || nowPlayingImagesLoading;
-	const isPopularLoading = popularDetailsloading || popularImagesLoading;
-	const isTopRatedLoading = topRatedDetailsloading || topRatedImagesLoading;
-	const isHeroLoading = favDetailsloading || favImagesLoading;
-
-
+	const {
+		mediaDetails: animationDetails,
+		mediaImages: animationImages,
+		isMediaLoading: animationLoading,
+	} = useGetMedia({
+		endpoint: Endpoint.discover,
+		mediaType,
+		genre: MovieGenreIds.animation, //scorsege 1032
+		originalLanguage: "en",
+	});
 	useEffect(() => {
 		setIsDoneLoading(
-			!isHeroLoading ||
-				!isNowPlayingLoading ||
-				!isTopRatedLoading ||
-				!isPopularLoading
+			!favLoading &&
+				!trLoading &&
+				!onAirLoading &&
+				!popLoading &&
+				!comedyLoading &&
+				!talkLoading &&
+				!animationLoading
 		);
-	}, [isHeroLoading, isNowPlayingLoading, isTopRatedLoading, isPopularLoading]);
+	}, []);
+	console.log("isDoneLoading", isDoneLoading);
 	return (
 		<Container>
 			{heroImageLoading && !isDoneLoading ? (
@@ -277,36 +253,40 @@ const navigate = useNavigate();
 								<HeroTitle
 									src={makeImagePath(heroImage?.logos[0].file_path || "")}
 								/>
+								<HeroButtonContainer>
+									<div>
+										<span className="material-icons-round">play_arrow</span>
+
+										<span>Play</span>
+									</div>
+									<div onClick={onHeroClick}>
+										<span className="material-icons-outlined">info</span>{" "}
+										<span>Info</span>
+									</div>
+								</HeroButtonContainer>
 							</HeroTitleContainer>
 						</Hero>
-						<Slider
-							imageData={favImages}
-							detailData={favDetails}
-							wrapperMargin={SLIDER_MARGIN}
-							sliderType="fav"
-							inBigMovie={false}
-							mediaType="tv"
-						/>
+
 						<>
 							<Section>
-								<h1>Popular</h1>
-								{popularImages && popularDetails && (
+								<h1>Recommended</h1>
+								{favImages && favDetails && (
 									<Slider
-										imageData={popularImages}
-										detailData={popularDetails}
-										sliderType="popular"
+										imageData={favImages}
+										detailData={favDetails}
+										sliderType="fav"
 										inBigMovie={false}
 										mediaType="tv"
 									/>
 								)}
 							</Section>
 							<Section>
-								<h1>Now Playing</h1>
-								{nowPlayingImages && nowPlayingDetails && (
+								<h1>Airing Today</h1>
+								{onAirImages && onAirDetails && (
 									<Slider
-										imageData={nowPlayingImages}
-										detailData={nowPlayingDetails}
-										sliderType="nowPlaying"
+										imageData={onAirImages}
+										detailData={onAirDetails}
+										sliderType="onAir"
 										inBigMovie={false}
 										mediaType="tv"
 									/>
@@ -314,11 +294,60 @@ const navigate = useNavigate();
 							</Section>
 							<Section>
 								<h1>Top Rated</h1>
-								{topRatedDetails && topRatedImages && (
+								{trDetails && trImages && (
 									<Slider
-										imageData={topRatedImages}
-										detailData={topRatedDetails}
+										imageData={trImages}
+										detailData={trDetails}
 										sliderType="topRated"
+										inBigMovie={false}
+										mediaType="tv"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Popular</h1>
+								{popImages && popDetails && (
+									<Slider
+										imageData={popImages}
+										detailData={popDetails}
+										sliderType="popular"
+										inBigMovie={false}
+										mediaType="tv"
+									/>
+								)}
+							</Section>
+
+							<Section>
+								<h1>Comedy</h1>
+								{comedyDetails && comedyImages && (
+									<Slider
+										imageData={comedyImages}
+										detailData={comedyDetails}
+										sliderType="comedy"
+										inBigMovie={false}
+										mediaType="tv"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Talk shows</h1>
+								{talkDetails && talkImages && (
+									<Slider
+										imageData={talkImages}
+										detailData={talkDetails}
+										sliderType="talk"
+										inBigMovie={false}
+										mediaType="tv"
+									/>
+								)}
+							</Section>
+							<Section>
+								<h1>Animation</h1>
+								{animationDetails && animationImages && (
+									<Slider
+										imageData={animationImages}
+										detailData={animationDetails}
+										sliderType="animation"
 										inBigMovie={false}
 										mediaType="tv"
 									/>
@@ -334,6 +363,4 @@ const navigate = useNavigate();
 	);
 }
 
-
-
-*/
+export default Tv;

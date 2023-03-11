@@ -442,7 +442,7 @@ const ReviewCardWrapper = styled(SectionWrapper)<{
 
 const EpisodeContainer = styled(motion.div)`
 	display: grid;
-	grid-gap: 20px;
+	grid-gap: 40px;
 	grid-template-columns: 1fr 1.5fr;
 	align-self: flex-end;
 	height: 100%;
