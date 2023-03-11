@@ -67,15 +67,7 @@ const Hero = styled.div<{ bgPhoto: string }>`
 			transparent 90%,
 			rgba(28, 28, 28, 0.8) 100%
 		),
-		linear-gradient(
-			to bottom,
-			transparent 90%,
-			#0c0c0c 100%,
-			#111 98%,
-			#222 96%,
-			#333 94%,
-			#555 92%
-		),
+		linear-gradient(to bottom, transparent 90%, black 100%),
 		url(${(props) => props.bgPhoto});
 	background-size: cover;
 	box-shadow: 0 0 40px 20px black;
@@ -93,6 +85,7 @@ const HeroTitle = styled.img`
 `;
 
 const Section = styled.div`
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
@@ -100,13 +93,14 @@ const Section = styled.div`
 		font-size: 1.4rem;
 		font-weight: 500;
 		padding: 0 3.5rem;
-		z-index: 2;
 	}
 	margin-top: 25vh;
 `;
 
 const TvBody = styled.div`
-	margin-top: 100vh;
+	position: relative;
+	display: flex;
+	flex-direction: column;
 `;
 
 function Tv() {
@@ -319,19 +313,15 @@ function Tv() {
 								/>
 							</HeroTitleContainer>
 						</Hero>
-
-						<TvBody>
-							<Section>
-								<h1>Recommended</h1>
-								<Slider
-									imageData={favImages}
-									detailData={favDetails}
-									wrapperMargin={SLIDER_MARGIN}
-									sliderType="fav"
-									inBigMovie={false}
-									mediaType="tv"
-								/>
-							</Section>
+						<Slider
+							imageData={favImages}
+							detailData={favDetails}
+							wrapperMargin={SLIDER_MARGIN}
+							sliderType="fav"
+							inBigMovie={false}
+							mediaType="tv"
+						/>
+						<>
 							<Section>
 								<h1>Popular</h1>
 								{popularImages && popularDetails && (
@@ -368,7 +358,7 @@ function Tv() {
 									/>
 								)}
 							</Section>
-						</TvBody>
+						</>
 
 						<Outlet />
 					</>

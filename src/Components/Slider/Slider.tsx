@@ -130,28 +130,6 @@ const Box = styled(motion.div)`
 	}
 `;
 
-const boxVariants = {
-	normal: {
-		zIndex: 1,
-		scale: 1,
-		opacity: 1,
-		transition: { duration: 0.5 },
-	},
-	hover: {
-		scale: 1.2,
-		y: -50,
-		zIndex: 4,
-		transition: {
-			delay: 0.3,
-			duration: 0.2,
-			type: "tween",
-		},
-	},
-	exit: {
-		zIndex: 5,
-	},
-};
-
 const BoxImgContainer = styled(motion.div)<{
 	bgphoto?: string;
 	pos: (string | number)[] | string;
@@ -245,6 +223,9 @@ const Info = styled(motion.div)`
 	}
 `;
 const infoVariants = {
+	visible: {
+		opacity: 0,
+	},
 	hover: {
 		opacity: 1,
 		scale: 0.9,
@@ -253,6 +234,9 @@ const infoVariants = {
 			duaration: 0.3,
 			type: "tween",
 		},
+	},
+	exit: {
+		zIndex: 1,
 	},
 };
 
@@ -349,7 +333,7 @@ const CastCardContainer = styled(motion.div)`
 	width: 100%;
 	grid-template-columns: repeat(2, 1fr);
 	position: absolute;
-	grid-column-gap: 2vw;
+	grid-column-gap: 8px;
 	grid-row-gap: 20px;
 	img {
 		max-width: 100%;
@@ -394,10 +378,7 @@ const CastCard = styled(motion.div)<ICastCard>`
 		span:last-child {
 			font-size: 0.8rem;
 			color: ${(props) => props.theme.white.darker};
-			display: -webkit-box;
-			-webkit-line-clamp: 3;
-			-webkit-box-orient: vertical;
-			overflow: hidden;
+			display: -webkit-box'
 		}
 	}
 `;

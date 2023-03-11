@@ -31,7 +31,6 @@ const Box = styled(motion.div)`
 
 const boxVariants = {
 	normal: {
-		zIndex: 1,
 		scale: 1,
 		opacity: 1,
 		transition: { duration: 0.5 },
@@ -45,9 +44,6 @@ const boxVariants = {
 			duration: 0.2,
 			type: "tween",
 		},
-	},
-	exit: {
-		zIndex: 5,
 	},
 };
 
@@ -182,6 +178,9 @@ const Info = styled(motion.div)`
 	}
 `;
 const infoVariants = {
+	active: {
+		zIndex: 1,
+	},
 	hover: {
 		opacity: 1,
 		scale: 0.9,
