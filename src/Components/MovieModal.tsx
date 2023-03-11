@@ -738,10 +738,16 @@ function MovieModal() {
 																					`(${recommend.vote_count.toLocaleString()})`}
 																			</span>
 																		</RecommendationRating>
-																		<span>
-																			{recommend.media_type
-																				? recommend.media_type
-																				: null}
+																		<span
+																			style={{
+																				textTransform: "capitalize",
+																				fontSize: "0.8rem",
+																			}}
+																		>
+																			{recommend.media_type === "tv"
+																				? recommend.media_type.toUpperCase() +
+																				  " Show"
+																				: recommend.media_type ?? null}
 																		</span>
 																	</Recommendation>
 																))}

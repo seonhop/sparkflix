@@ -349,7 +349,7 @@ const CastCardContainer = styled(motion.div)`
 	width: 100%;
 	grid-template-columns: repeat(2, 1fr);
 	position: absolute;
-	grid-column-gap: 8px;
+	grid-column-gap: 2vw;
 	grid-row-gap: 20px;
 	img {
 		max-width: 100%;
@@ -394,6 +394,10 @@ const CastCard = styled(motion.div)<ICastCard>`
 		span:last-child {
 			font-size: 0.8rem;
 			color: ${(props) => props.theme.white.darker};
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
 		}
 	}
 `;
@@ -595,7 +599,10 @@ export function EpisodeSlider({ episodes, tvId, images }: IEpisodeSliderProps) {
 		if (totalEpisodes <= 0) {
 			setNoReview(true);
 		}
-	}, [arePages, noEpisode]);
+		if (totalBackdrops > 1) {
+			setBackdropIndex(1);
+		}
+	}, [arePages, noEpisode, totalBackdrops]);
 
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
 		if (episodes) {
@@ -887,7 +894,7 @@ export function CastSlider({ cast, movieId }: CastSliderProps) {
 	useEffect(() => {
 		console.log("maxIndex", maxIndex === 0);
 		console.log("totalCast < offset", totalCast < offset);
-		if (totalCast < offset) {
+		if (totalCast <= offset) {
 			setArePages(false);
 		}
 	}, [totalCast, offset]);

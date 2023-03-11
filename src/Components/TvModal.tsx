@@ -590,8 +590,8 @@ function TvModal() {
 	const [logoExists, setLogoExists] = useState(false);
 	const [movieImagesExists, setMovieImagesExists] = useState(false);
 
-	const clickedMovie = moviePathMatch?.params.tvId && tvDetailResult;
-	console.log("clickedMovie", clickedMovie);
+	const clickedTv = moviePathMatch?.params.tvId && tvDetailResult;
+	console.log("clickedMovie", clickedTv);
 	const [mainCast, setMainCast] = useState<Cast[]>([]);
 	let newMainCast = undefined;
 	if (tvCreditsResult) {
@@ -645,14 +645,13 @@ function TvModal() {
 							animate={{ opacity: 1 }}
 						/>
 						<BigMovie layoutId={moviePathMatch?.params.movieId}>
-							{clickedMovie && (
+							{clickedTv && (
 								<>
 									<>
 										<BigCover>
 											<img
 												src={makeImagePath(
-													clickedMovie.backdrop_path ||
-														clickedMovie.poster_path,
+													clickedTv.backdrop_path || clickedTv.poster_path,
 													"original"
 												)}
 											/>
@@ -666,7 +665,7 @@ function TvModal() {
 													)}
 												/>
 											) : (
-												clickedMovie.name
+												clickedTv.name
 											)}
 										</BigTitle>
 										<CloseBtn className="material-icons" onClick={onModalClose}>
@@ -679,15 +678,13 @@ function TvModal() {
 												<YearGenreCountryContainer>
 													<span>
 														{"Since " +
-															new Date(
-																clickedMovie.first_air_date
-															).getFullYear()}
+															new Date(clickedTv.first_air_date).getFullYear()}
 													</span>
 													<span>
-														{formatGenres(clickedMovie.genres, " / ")}
-														{clickedMovie.production_countries[0] &&
+														{formatGenres(clickedTv.genres, " / ")}
+														{clickedTv.production_countries[0] &&
 															`\u00A0\u00A0\u2022\u00A0\u00A0${formatCountry(
-																clickedMovie.production_countries[0]
+																clickedTv.production_countries[0]
 															)}`}
 													</span>
 												</YearGenreCountryContainer>
@@ -695,34 +692,35 @@ function TvModal() {
 													<div>
 														<span className="material-icons">star</span>
 														<span>
-															{formatRating(clickedMovie?.vote_average) +
+															{formatRating(clickedTv?.vote_average) +
 																" " +
-																formatVoteCount(clickedMovie?.vote_count)}
+																formatVoteCount(clickedTv?.vote_count)}
 														</span>
 													</div>
 													<MidDot />
 													<span>
-														{formatTime(clickedMovie.episode_run_time[0] || 0)}
+														{clickedTv.number_of_episodes.toLocaleString() +
+															" episodes"}
 													</span>
 												</InfoContainer>
 												<BigTagline>
-													{clickedMovie.tagline
-														? clickedMovie.tagline
+													{clickedTv.tagline
+														? clickedTv.tagline
 														: mainCast
-														? `A ${clickedMovie.genres[
-																clickedMovie.genres.length - 1
+														? `A ${clickedTv.genres[
+																clickedTv.genres.length - 1
 														  ].name.toLowerCase()} show ` +
 														  (mainCast[0] && mainCast[1]
 																? `featuring ${mainCast[0].name}, ${mainCast[1].name} and more`
 																: "")
-														: clickedMovie.name}
+														: clickedTv.name}
 												</BigTagline>
 											</div>
 											<BigOverview>
-												{clickedMovie.overview ? (
+												{clickedTv.overview ? (
 													<>
 														<span>Overview</span>
-														<p> {clickedMovie.overview}</p>
+														<p> {clickedTv.overview}</p>
 													</>
 												) : null}
 											</BigOverview>
@@ -832,10 +830,16 @@ function TvModal() {
 																					`(${recommend.vote_count.toLocaleString()})`}
 																			</span>
 																		</RecommendationRating>
-																		<span>
-																			{recommend.media_type
-																				? recommend.media_type
-																				: null}
+																		<span
+																			style={{
+																				textTransform: "capitalize",
+																				fontSize: "0.8rem",
+																			}}
+																		>
+																			{recommend.media_type === "tv"
+																				? recommend.media_type.toUpperCase() +
+																				  " Show"
+																				: recommend.media_type ?? null}
 																		</span>
 																	</Recommendation>
 																))}

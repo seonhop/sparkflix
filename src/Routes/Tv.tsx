@@ -105,6 +105,10 @@ const Section = styled.div`
 	margin-top: 25vh;
 `;
 
+const TvBody = styled.div`
+	margin-top: 100vh;
+`;
+
 function Tv() {
 	const navigate = useNavigate();
 	const onHeroClick = () => {
@@ -316,16 +320,18 @@ function Tv() {
 							</HeroTitleContainer>
 						</Hero>
 
-						<Slider
-							imageData={favImages}
-							detailData={favDetails}
-							wrapperMargin={SLIDER_MARGIN}
-							sliderType="fav"
-							inBigMovie={false}
-							mediaType="tv"
-						/>
-
-						<>
+						<TvBody>
+							<Section>
+								<h1>Recommended</h1>
+								<Slider
+									imageData={favImages}
+									detailData={favDetails}
+									wrapperMargin={SLIDER_MARGIN}
+									sliderType="fav"
+									inBigMovie={false}
+									mediaType="tv"
+								/>
+							</Section>
 							<Section>
 								<h1>Popular</h1>
 								{popularImages && popularDetails && (
@@ -362,7 +368,7 @@ function Tv() {
 									/>
 								)}
 							</Section>
-						</>
+						</TvBody>
 
 						<Outlet />
 					</>
