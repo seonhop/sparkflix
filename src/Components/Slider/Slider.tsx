@@ -954,22 +954,6 @@ export function Slider({
 	onClick,
 }: ISlider) {
 	const navigate = useNavigate();
-	/* 
-	const [arePages, setArePages] = useState(true);
-	const totalReviews = reviews.length;
-	const offset = 2;
-	const maxIndex = Math.ceil(totalReviews / offset) - 1;
-	useEffect(() => {
-		if (totalReviews <= offset) {
-			setArePages(false);
-		}
-		if (totalReviews <= 0) {
-			setNoReview(true);
-		}
-	}, [arePages, noReview]);
-	
-	*/
-
 	const [dirRight, setDirRight] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [leaving, setLeaving] = useState(false);
@@ -981,12 +965,6 @@ export function Slider({
 		: forReview?.data || [];
 	const sliderOffset = offset ? offset : OFF_SET;
 	const [arePages, setArePages] = useState(true);
-
-	useEffect(() => {
-		if (maxIndex === 0) {
-			setArePages(false);
-		}
-	}, [arePages]);
 
 	const handleBoxIndexHover = (index: number) => {
 		setHoveredIndex(index);
@@ -1006,6 +984,11 @@ export function Slider({
 	const maxIndex = detailData
 		? Math.floor(totalData / sliderOffset) - 1
 		: Math.ceil(totalData / sliderOffset) - 1;
+	useEffect(() => {
+		if (maxIndex === 0 || totalData < sliderOffset) {
+			setArePages(false);
+		}
+	}, [arePages]);
 	const manipulateIndex = (sliderBtnPos: ISliderBtnPos, maxIndex: number) => {
 		if (imageData || forCast || forReview) {
 			if (leaving) return;

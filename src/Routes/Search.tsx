@@ -111,7 +111,7 @@ function Search() {
 				<h1>Search results for "{keyword}"</h1>
 				{movieData || tvData ? (
 					<>
-						{movieData && (
+						{movieData?.length !== 0 && (
 							<Section>
 								<h1>Movies</h1>
 								<Slider
@@ -125,7 +125,7 @@ function Search() {
 								/>
 							</Section>
 						)}
-						{tvData && (
+						{tvData?.length !== 0 && (
 							<Section>
 								<h1>TV Shows</h1>
 								<Slider

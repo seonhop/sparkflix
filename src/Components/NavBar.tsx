@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Link, useMatch, useNavigate } from "react-router-dom";
+import { Link, useMatch, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
 	motion,
@@ -147,6 +147,10 @@ function NavBar() {
 	const homeMatch = useMatch("/");
 	const navigate = useNavigate();
 	const tvMatch = useMatch("/tv");
+	const searchMatch = useMatch("/search");
+	const [searchParams, setSearchParams] = useSearchParams();
+	const keyword = searchParams.get("keyword");
+	console.log("searchparam", searchParams.get("keyword"));
 	const [searchOpen, setSearchOpen] = useState(false);
 	const searchBarAni = useAnimation();
 	const navBarAni = useAnimation();
@@ -176,8 +180,12 @@ function NavBar() {
 	};
 	const onClickClose = () => {
 		setSearchOpen(false);
-		if (!homeMatch) {
+		if (homeMatch) {
 			navigate("/");
+		} else if (tvMatch) {
+			navigate("/tv");
+		} else {
+			navigate(`/search?keyword=${keyword}`);
 		}
 	};
 

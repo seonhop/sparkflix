@@ -4,6 +4,7 @@ import {
 	useMatch,
 	PathMatch,
 	useOutletContext,
+	useSearchParams,
 } from "react-router-dom";
 import styled from "styled-components";
 import { createGlobalStyle } from "styled-components";
@@ -392,6 +393,7 @@ function TvModal() {
 	const searchPathMatch: PathMatch<string> | null =
 		useMatch("/search/tv/:tvId");
 	console.log("searchPathMatch", searchPathMatch);
+
 	const moviePathMatch: PathMatch<string> | null = useMatch("/tv/:tvId");
 	console.log(moviePathMatch);
 	const clickedTvId =
