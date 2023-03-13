@@ -1,12 +1,18 @@
-import { useLocation } from "react-router-dom";
-import { getSearchResults, useGetImages, fetchData } from "../api";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getSearchResults, useGetImages, fetchData, useGetMedia } from "../api";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import { IGetSearchResults } from "../Interfaces/API/IGetSearchResults";
 import { IGetMovieImagesResult } from "../Interfaces/API/IGetImages";
 import { makeImagePath } from "../utils/makePath";
 import { IGetMovieDetailResult } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
-import { Endpoint } from "../utils/consts";
+import { Endpoint, QueryMediaType } from "../utils/consts";
+import { useState } from "react";
+import { MovieTvBox } from "../Components/Slider/MovieTvBox";
+import { Outlet } from "react-router-dom";
+import { Slider } from "../Components/Slider/Slider";
+import { Section } from "./Home";
+import { isTvDetail } from "../utils/utils";
 
 const SearchContainer = styled.div`
 	display: flex;
@@ -41,51 +47,104 @@ const SearchResults = styled.div`
 `;
 
 function Search() {
+	/* 
+		handleBoxIndexHover,
+	mediaItem,
+	imageData,
+	sliderType,
+	hoveredIndex,
+	onExpandClicked,
+	*/
+	const [leaving, setLeaving] = useState(false);
+	const [hoveredIndex, setHoveredIndex] = useState(-1);
+	const navigate = useNavigate();
+	const handleBoxIndexHover = (index: number) => {
+		setHoveredIndex(index);
+	};
+
 	const location = useLocation();
 	const keyword = new URLSearchParams(location.search).get("keyword");
+
 	const { data } = useQuery<IGetSearchResults>(["searchResults", keyword], () =>
 		getSearchResults(keyword as any)
 	);
-
-	const { data: detailSearchResults } = useQuery<IGetMovieDetailResult[]>(
-		["detailSearchResults", keyword],
-		async () => {
-			const movies = data?.results.filter((movie) => movie.id) ?? [];
-			console.log("movies..., ", movies);
-			const promises = movies.map((movie) =>
+	const { data: imagesData, isLoading: imagesDataLoading } = useQuery<
+		IGetMovieImagesResult[]
+	>([keyword, data, "images"], async () => {
+		if (!data) {
+			return [];
+		}
+		const promises =
+			data &&
+			data?.results.map((result) =>
 				fetchData({
-					endpoint: Endpoint.details,
-					mediaType: undefined,
-					id: movie.id,
-					originalLanguage: movie.original_language,
+					endpoint: Endpoint.images,
+					mediaType: result.media_type,
+					id: result.id,
+					originalLanguage: result.original_language,
 				})
 			);
-
-			console.log("logging...", promises);
-			const images = await Promise.all(promises);
-			return images.flat();
-		},
-		{
-			enabled: !!data,
-		}
-	);
+		return Promise.all(promises);
+	});
+	console.log("search imgaes", imagesData);
+	console.log("search keyword", keyword);
+	const onExpandClicked = (id: string, mediaType: string | undefined) => {
+		navigate({
+			pathname: `/search/${mediaType}/${id}`,
+			search: `?keyword=${keyword}`,
+		});
+		//navigate(`/search/${mediaType}/${id}`);
+	};
 	console.log(data);
-	console.log(detailSearchResults);
+	console.log("data", data?.results[0].media_type);
+	const filteredData = data?.results.filter((item) => item.backdrop_path);
+	const movieData = filteredData?.filter((item) => item.media_type === "movie");
+	const tvData = filteredData?.filter((item) => item.media_type === "tv");
+
+	console.log("movieData", movieData);
+	console.log("tvData", tvData);
+	console.log("isit?", isTvDetail(tvData && tvData[0]));
+
 	return (
 		<>
 			<SearchContainer>
 				<h1>Search results for "{keyword}"</h1>
-				<SearchResults>
-					{data
-						? data.results.map((result) =>
-								result.backdrop_path ? (
-									<div key={result.id}>
-										<img src={makeImagePath(result.backdrop_path || "")} />
-									</div>
-								) : null
-						  )
-						: "Couldn't find"}
-				</SearchResults>
+				{movieData || tvData ? (
+					<>
+						{movieData && (
+							<Section>
+								<h1>Movies</h1>
+								<Slider
+									imageData={imagesData}
+									detailData={movieData}
+									inBigMovie={false}
+									sliderType="searchMovies"
+									mediaType="movies"
+									onClick={onExpandClicked}
+									path={keyword as string}
+								/>
+							</Section>
+						)}
+						{tvData && (
+							<Section>
+								<h1>TV Shows</h1>
+								<Slider
+									imageData={imagesData}
+									detailData={tvData}
+									inBigMovie={false}
+									sliderType="searchTv"
+									mediaType="tv"
+									onClick={onExpandClicked}
+									path={keyword as string}
+								/>
+							</Section>
+						)}
+					</>
+				) : (
+					<h1>No result</h1>
+				)}
+
+				<Outlet context={keyword} />
 			</SearchContainer>
 		</>
 	);

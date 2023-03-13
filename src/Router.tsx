@@ -37,6 +37,16 @@ const router = createBrowserRouter(
 				{
 					path: "/search",
 					element: <Search />,
+					children: [
+						{
+							path: "/search/tv/:tvId?",
+							element: <TvModal />,
+						},
+						{
+							path: "/search/movies/:movieId?",
+							element: <MovieModal />,
+						},
+					],
 				},
 			],
 		},

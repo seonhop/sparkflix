@@ -11,6 +11,10 @@ import {
 	ITvRecommendsResult,
 } from "../../Interfaces/API/IGetRecommends";
 import { IGetTvDetailResult } from "../../Interfaces/API/IGetDetails/IGetTvDetails";
+import {
+	IGetSearchResults,
+	SearchResult,
+} from "../../Interfaces/API/IGetSearchResults";
 
 const Box = styled(motion.div)`
 	display: flex;
@@ -38,7 +42,7 @@ const boxVariants = {
 	hover: {
 		scale: 1.2,
 		y: -50,
-		zIndex: 4,
+		zIndex: 999,
 		transition: {
 			delay: 0.3,
 			duration: 0.2,
@@ -63,36 +67,22 @@ const BoxImgContainer = styled(motion.div)<{
 	height: 120px;
 	overflow: hidden;
 
-	&::after {
-		content: "";
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-image: linear-gradient(to top, #1f1f1f, 5%, transparent);
-	}
-
 	> img:first-child {
 		width: 100%;
-
+		height: 100%;
+		object-fit: cover;
 		object-position: center;
 	}
 	div {
-		width: 75%;
+		width: 60%;
 		height: 50%;
 		position: absolute;
 		display: flex;
 		justify-content: flex-start;
 		align-items: flex-end;
-		top: ${(props) => props.pos[0]}l;
-		right: ${(props) => props.pos[1]};
-		bottom: ${(props) => props.pos[2]};
-		left: ${(props) => props.pos[3]};
-		transform: translate(
-			${(props) => props.transform[0]},
-			${(props) => props.transform[1]}
-		);
+		bottom: 0;
+		left: 0;
+		transform: translate(2vh, -2vh);
 		img {
 			width: 100%;
 			height: 100%;
@@ -166,7 +156,6 @@ const Info = styled(motion.div)`
 			gap: 4px;
 			> span:first-child {
 				font-size: 18px;
-				color: yellow;
 			}
 		}
 	}
@@ -193,44 +182,70 @@ const infoVariants = {
 };
 
 const InfoBlock = styled.div`
+	color: ${(props) => props.theme.white.darker};
 	font-size: 0.8 rem;
 `;
 
 function InfoPopup({
+	mediaType,
 	isHovered,
 	mediaItem,
 	onExpandClicked,
+	hasRating,
+	path,
 }: {
 	isHovered: boolean;
-	mediaItem: IGetMovieDetailResult | IGetTvDetailResult;
-	onExpandClicked: (id: string) => void;
+	mediaType: string;
+	mediaItem: IGetMovieDetailResult | IGetTvDetailResult | SearchResult;
+	onExpandClicked: (id: string, mediaType: string, path?: string) => void;
+	hasRating: boolean;
+	path?: string;
 }) {
+	console.log(
+		"mediaItem genre_ids",
+		!isMovieDetail(mediaItem) && !isTvDetail(mediaItem)
+			? mediaItem?.genre_ids
+			: null
+	);
+
 	return (
 		<Info variants={infoVariants}>
 			<div>
 				<span className="material-icons-outlined">favorite_border</span>
 				<span
 					className="material-icons"
-					onClick={() => onExpandClicked(mediaItem.id + "")}
+					onClick={() => onExpandClicked(mediaItem.id + "", mediaType, path)}
 				>
 					expand_more
 				</span>
 			</div>
 			<InfoBlock>
 				<div>
-					<span className="material-icons">star</span>
-					<span>{formatRating(mediaItem?.vote_average)}</span>
+					<span
+						className="material-icons"
+						style={{ color: hasRating ? "yellow" : "inherit" }}
+					>
+						star
+					</span>
+					<span style={{ color: hasRating ? "white" : "inherit" }}>
+						{formatRating(mediaItem?.vote_average)}
+					</span>
 				</div>
-				<MidDot />
+				{(isMovieDetail(mediaItem) && mediaItem.runtime) ||
+				(isTvDetail(mediaItem) && mediaItem.number_of_episodes) ? (
+					<MidDot />
+				) : null}
 
 				<span>
 					{isMovieDetail(mediaItem)
-						? formatTime(mediaItem.runtime || 0)
-						: mediaItem.number_of_episodes.toLocaleString() + " episodes"}
+						? formatTime(mediaItem.runtime)
+						: isTvDetail(mediaItem) && mediaItem.number_of_episodes
+						? mediaItem.number_of_episodes.toLocaleString() + " episodes"
+						: null}
 				</span>
 			</InfoBlock>
 			<div>
-				<Genres movie={mediaItem} />
+				<Genres mediaItem={mediaItem} />
 			</div>
 		</Info>
 	);
@@ -238,11 +253,13 @@ function InfoPopup({
 
 export interface IMovieTvBox {
 	handleBoxIndexHover: (index: number) => void;
-	mediaItem: IGetMovieDetailResult | IGetTvDetailResult;
+	mediaItem: IGetMovieDetailResult | IGetTvDetailResult | SearchResult;
 	imageData: IGetMovieImagesResult[] | undefined;
 	sliderType: string;
 	hoveredIndex: number;
-	onExpandClicked: (movieId: string) => void;
+	mediaType: string;
+	onExpandClicked: (id: string, mediaType: string, path?: string) => void;
+	path?: string;
 }
 
 function isMovieRecommend(recommend: any): recommend is IMovieRecommendsResult {
@@ -268,7 +285,18 @@ export function MovieTvBox({
 	sliderType,
 	hoveredIndex,
 	onExpandClicked,
+	mediaType,
+	path,
 }: IMovieTvBox) {
+	console.log(
+		"hasrating",
+		mediaItem.vote_count,
+		!isTvDetail(mediaItem) && !isMovieDetail(mediaItem)
+			? mediaItem.name
+				? mediaItem.name
+				: mediaItem.title
+			: "never mind"
+	);
 	return (
 		<Box
 			variants={boxVariants}
@@ -316,6 +344,9 @@ export function MovieTvBox({
 					isHovered={hoveredIndex === mediaItem.id}
 					mediaItem={mediaItem}
 					onExpandClicked={onExpandClicked}
+					mediaType={mediaType}
+					hasRating={mediaItem.vote_count !== 0}
+					path={path}
 				/>
 			</AnimatePresence>
 		</Box>

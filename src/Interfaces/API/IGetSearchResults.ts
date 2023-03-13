@@ -1,11 +1,11 @@
 export interface IGetSearchResults {
 	page: number;
-	results: Result[];
+	results: SearchResult[];
 	total_pages: number;
 	total_results: number;
 }
 
-export interface Result {
+export interface SearchResult {
 	adult: boolean;
 	backdrop_path: string;
 	id: number;

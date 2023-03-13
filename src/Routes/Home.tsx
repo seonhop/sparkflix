@@ -91,7 +91,7 @@ const HeroTitle = styled.img`
 	max-height: 100%;
 `;
 
-const Section = styled.div`
+export const Section = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;

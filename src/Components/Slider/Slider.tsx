@@ -32,7 +32,7 @@ import { ReviewResults } from "../../Interfaces/API/IGetReviews";
 import { dir } from "console";
 import { MovieTvBox } from "./MovieTvBox";
 import { SliderPages } from "./SliderPages";
-import { CastContainer, MovieTvContainer } from "./SliderContainers";
+import { CastContainer } from "./SliderContainers";
 import { off } from "process";
 import { Episode } from "../../Interfaces/API/IGetSeasonDetail";
 
@@ -234,48 +234,9 @@ const infoVariants = {
 		},
 	},
 	exit: {
-		zIndex: 1,
+		opacity: 0,
 	},
 };
-
-function InfoPopup({
-	isHovered,
-	movie,
-	onExpandClicked,
-}: {
-	isHovered: boolean;
-	movie: IGetMovieDetailResult;
-	onExpandClicked: (movieId: string) => void;
-}) {
-	return (
-		<Info variants={infoVariants}>
-			<div>
-				<span className="material-icons-outlined">favorite_border</span>
-				<span
-					className="material-icons"
-					onClick={() => onExpandClicked(movie.id + "")}
-				>
-					expand_more
-				</span>
-			</div>
-			<div>
-				<div>
-					<span className="material-icons">star</span>
-					<span>
-						{formatRating(movie?.vote_average) +
-							" " +
-							formatVoteCount(movie?.vote_count)}
-					</span>
-				</div>
-				<MidDot />
-				<span>{formatTime(movie.runtime || 0)}</span>
-			</div>
-			<div>
-				<Genres movie={movie} />
-			</div>
-		</Info>
-	);
-}
 
 interface IPaginationProps {
 	maxindex: number;
@@ -989,8 +950,26 @@ export function Slider({
 	forReview,
 	offset,
 	mediaType,
+	path,
+	onClick,
 }: ISlider) {
 	const navigate = useNavigate();
+	/* 
+	const [arePages, setArePages] = useState(true);
+	const totalReviews = reviews.length;
+	const offset = 2;
+	const maxIndex = Math.ceil(totalReviews / offset) - 1;
+	useEffect(() => {
+		if (totalReviews <= offset) {
+			setArePages(false);
+		}
+		if (totalReviews <= 0) {
+			setNoReview(true);
+		}
+	}, [arePages, noReview]);
+	
+	*/
+
 	const [dirRight, setDirRight] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [leaving, setLeaving] = useState(false);
@@ -1015,7 +994,10 @@ export function Slider({
 	const toggleLeaving = () => {
 		setLeaving((prev) => !prev);
 	};
-	const onExpandClicked = (id: string) => {
+	const onExpandClicked = (id: string, mediaType: string, path?: string) => {
+		if (path) {
+			navigate(`/search?keyword=${path}/${mediaType}/${id}`);
+		}
 		navigate(`/${mediaType}/${id}`);
 	};
 	console.log(index);
@@ -1063,24 +1045,31 @@ export function Slider({
 							{detailData &&
 								detailData
 									?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
-									.map((movie) => (
+									.map((mediaItem) => (
 										<MovieTvBox
-											key={movie.id}
+											key={mediaItem.id}
 											handleBoxIndexHover={handleBoxIndexHover}
-											mediaItem={movie}
+											mediaItem={mediaItem}
 											imageData={imageData}
 											sliderType={sliderType}
 											hoveredIndex={hoveredIndex}
-											onExpandClicked={onExpandClicked}
+											onExpandClicked={onClick ? onClick : onExpandClicked}
+											mediaType={mediaType}
+											path={path}
 										/>
 									))}
-							<SliderButton
-								manipulateIndex={manipulateIndex}
-								maxIndex={maxIndex}
-								dirRight={dirRight}
-								inBigMovie={inBigMovie}
-							/>
-							<SliderPages maxIndex={maxIndex} index={index} />
+							{arePages && (
+								<>
+									{" "}
+									<SliderButton
+										manipulateIndex={manipulateIndex}
+										maxIndex={maxIndex}
+										dirRight={dirRight}
+										inBigMovie={inBigMovie}
+									/>
+									<SliderPages maxIndex={maxIndex} index={index} />
+								</>
+							)}
 						</MovieSliderContainer>
 					)}
 				</AnimatePresence>

@@ -1,12 +1,18 @@
+import { useQuery } from "react-query";
+import { getGenreIdList } from "../api";
 import { ProductionCountry } from "../Interfaces/API/IGetDetails/IGetMovieDetail";
+import { API_KEY, BASE_PATH } from "./consts";
 
-export function formatTime(totalMinutes: number) {
-	const hours = Math.floor(totalMinutes / 60);
-	const minutes = totalMinutes % 60;
-	if (totalMinutes < 60) {
-		return `${minutes}m`;
+export function formatTime(totalMinutes: number | undefined) {
+	if (totalMinutes) {
+		const hours = Math.floor(totalMinutes / 60);
+		const minutes = totalMinutes % 60;
+		if (totalMinutes < 60) {
+			return `${minutes}m`;
+		}
+		return `${hours}h ${minutes}m`;
 	}
-	return `${hours}h ${minutes}m`;
+	return null;
 }
 
 export function formatAirDate(date: number) {
@@ -47,17 +53,42 @@ export function formatCountry(countryData: ProductionCountry) {
 	return countryData.name;
 }
 
-export function formatGenres(
-	genres: { id: number; name: string }[] | null | undefined,
-	format: string
-) {
-	if (genres) {
-		const genreList: string[] = genres.map((item) =>
-			item.name === "Science Fiction" ? "SF" : item.name
-		);
-		return genreList.slice(0, 3).join(format).length < 20
-			? genreList.slice(0, 3).join(format)
-			: genreList.slice(0, 2).join(format);
+export interface IGenreIdResult {
+	genres: { id: number; name: string }[];
+}
+
+interface IFormatGenres {
+	format: string;
+	genreIdList?: IGenreIdResult;
+	inputObjList?: { id: number; name: string }[];
+	inputIdList?: number[];
+}
+export function formatGenres({
+	format,
+	inputIdList,
+	inputObjList,
+	genreIdList,
+}: IFormatGenres) {
+	console.log("inputIdList", inputIdList);
+	if ((inputIdList && genreIdList) || inputObjList) {
+		let genres = undefined;
+		if (inputIdList && genreIdList) {
+			console.log("genre hereeee");
+			genres = genreIdList.genres
+				.filter((genre) => inputIdList.includes(genre.id))
+				.map((genre) => genre.name);
+			console.log("search genre result", genres);
+		} else if (inputObjList) {
+			genres = inputObjList.map((item) =>
+				item.name === "Science Fiction" ? "SF" : item.name
+			);
+		}
+		if (genres) {
+			return genres.slice(0, 3).join(format).length < 20
+				? genres.slice(0, 3).join(format)
+				: genres.slice(0, 2).join(format);
+		}
+		return null;
 	}
 	return null;
 }

@@ -55,55 +55,7 @@ interface IMovieTvContainer {
 	manipulateIndex: (sliderBtnPos: ISliderBtnPos, maxIndex: number) => void;
 	maxIndex: number;
 	inBigMovie: boolean;
-}
-
-export function MovieTvContainer({
-	index,
-	dirRight,
-	detailData,
-	handleBoxIndexHover,
-	imageData,
-	sliderType,
-	hoveredIndex,
-	onExpandClicked,
-	manipulateIndex,
-	maxIndex,
-	inBigMovie,
-}: IMovieTvContainer) {
-	return (
-		<MovieSliderContainer
-			variants={movieSliderContainerVariants}
-			initial="hidden"
-			animate="visible"
-			whileHover="hover"
-			exit="exit"
-			key={index}
-			transition={{ type: "tween", duration: 1 }}
-			custom={dirRight}
-		>
-			{detailData &&
-				detailData
-					?.slice(OFF_SET * index, OFF_SET * index + OFF_SET)
-					.map((movie) => (
-						<MovieTvBox
-							key={movie.id}
-							handleBoxIndexHover={handleBoxIndexHover}
-							mediaItem={movie}
-							imageData={imageData}
-							sliderType={sliderType}
-							hoveredIndex={hoveredIndex}
-							onExpandClicked={onExpandClicked}
-						/>
-					))}
-			<SliderButton
-				manipulateIndex={manipulateIndex}
-				maxIndex={maxIndex}
-				dirRight={dirRight}
-				inBigMovie={inBigMovie}
-			/>
-			<SliderPages maxIndex={maxIndex} index={index} />
-		</MovieSliderContainer>
-	);
+	mediaType: string;
 }
 
 const CastCardContainer = styled(motion.div)`

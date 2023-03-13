@@ -48,6 +48,7 @@ const GlobalStyle = createGlobalStyle`
 const Overlay = styled(motion.div)`
 	position: fixed;
 	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.5);
@@ -170,30 +171,6 @@ const OverViewWrapper = styled.div`
 	width: 100%;
 `;
 
-const OverviewContainer = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 20px;
-	color: ${(props) => props.theme.white.lighter};
-	:last-child {
-		font-size: 16px;
-		gap: 12px;
-		> div {
-			display: flex;
-			gap: 4px;
-			align-items: flex-start;
-		}
-		span:nth-child(odd) {
-			color: ${(props) => props.theme.white.darker};
-			font-size: 14px;
-		}
-		span:nth-child(even) {
-			line-height: 1.25;
-			vertical-align: top;
-		}
-	}
-`;
-
 const InfoContainer = styled.div`
 	display: flex;
 	align-items: center;
@@ -225,60 +202,6 @@ const YearGenreCountryContainer = styled.div`
 		border-radius: 4px;
 	}
 `;
-
-const CastCardWrapper = styled.div`
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	grid-template-rows: repeat(3, 1fr);
-
-	grid-column-gap: 8px;
-	grid-row-gap: 20px;
-	img {
-		max-width: 100%;
-		max-height: 100%;
-	}
-`;
-
-const CastCardContainer = styled.div`
-	display: grid;
-	grid-template-columns: 1fr 3fr;
-	grid-gap: 12px;
-	> div:first-child {
-		width: 80px;
-		height: 80px;
-		border-radius: 8px;
-		background-color: black;
-		background-size: cover;
-
-		> img {
-			object-fit: cover;
-			object-position: center 20%;
-			border-radius: inherit;
-			width: 100%;
-			height: 100%;
-		}
-	}
-	> div:last-child {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: 12px;
-		span:first-child {
-			font-size: 1.2rem;
-			font-weight: 600;
-		}
-		span:last-child {
-			font-size: 0.8rem;
-			color: ${(props) => props.theme.white.darker};
-		}
-	}
-`;
-
-interface ICastCardProps {
-	name: string;
-	character: string;
-	image_path: string;
-}
 
 const BigMovieSectionTitle = styled.span`
 	font-size: 1.8rem;
@@ -355,65 +278,6 @@ const CloseBtn = styled.span`
 	padding: 8px;
 	:hover {
 		cursor: pointer;
-	}
-`;
-
-const ReviewCardWrapper = styled.div`
-	width: 100%;
-	height: 26vh;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-gap: 20px;
-`;
-
-const ReviewCard = styled.div`
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-
-	width: 100%;
-	gap: 20px;
-	background-color: ${(props) => props.theme.black.veryDark};
-	padding: 20px;
-	div:first-child {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		font-weight: 600;
-		justify-content: space-between;
-		img {
-			width: 35px;
-			height: 35px;
-			border-radius: 50%;
-			object-fit: cover;
-			object-position: center;
-		}
-		div:first-child {
-			justify-content: flex-start;
-			width: 80%;
-			font-size: 100%;
-		}
-		div:last-child {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: 2px 12px;
-			gap: 4px;
-			border: 1px solid ${(props) => props.theme.white.darker};
-			border-radius: 20px;
-			span {
-				font-size: 14px;
-				font-weight: 400;
-			}
-		}
-	}
-	div:last-child {
-		display: -webkit-box;
-		line-height: 1.5;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 `;
 
@@ -513,13 +377,26 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 function TvModal() {
 	let mediaType = QueryMediaType.tv;
 	const navigate = useNavigate();
+	const keyword = useOutletContext();
+	console.log("outlet keyword", keyword);
 	const onRecommendClick = (tvId: string) => {
-		console.log(tvId);
-		navigate(`/tv/${tvId}`);
+		if (keyword) {
+			navigate({
+				pathname: `/search/tv/${tvId}`,
+				search: `?keyword=${keyword}`,
+			});
+		} else {
+			navigate(`/tv/${tvId}`);
+		}
 	};
+	const searchPathMatch: PathMatch<string> | null =
+		useMatch("/search/tv/:tvId");
+	console.log("searchPathMatch", searchPathMatch);
 	const moviePathMatch: PathMatch<string> | null = useMatch("/tv/:tvId");
 	console.log(moviePathMatch);
-	const clickedTvId = moviePathMatch?.params.tvId;
+	const clickedTvId =
+		moviePathMatch?.params.tvId || searchPathMatch?.params.tvId;
+	console.log("clickedTvId", clickedTvId);
 	const { data: tvDetailResult } = useQuery<IGetTvDetailResult>(
 		["tvDetailResult", clickedTvId],
 		() =>
@@ -530,12 +407,8 @@ function TvModal() {
 				originalLanguage: "en",
 			})
 	);
+	console.log("tvmodal data detail", tvDetailResult);
 
-	console.log("detail", tvDetailResult);
-	console.log(
-		"cropped detail",
-		tvDetailResult?.seasons[tvDetailResult?.seasons.length - 1]
-	);
 	const { data: tvImages } = useQuery<IGetMovieImagesResult>(
 		["tvImagesResult", clickedTvId],
 		() =>
@@ -546,9 +419,7 @@ function TvModal() {
 				originalLanguage: "en, cn",
 			})
 	);
-	const totalBackdrops = tvImages?.backdrops.length;
-
-	console.log("images", tvImages);
+	console.log("tvmodal data images", tvImages);
 	const { data: tvRecommends, isLoading: isMovieRecommendsLoading } =
 		useQuery<IGetRecommendsResults>(["tvRecommendsResult", clickedTvId], () =>
 			fetchData({
@@ -557,7 +428,6 @@ function TvModal() {
 				id: Number(clickedTvId),
 			})
 		);
-	console.log("recommends", tvRecommends);
 	const { data: tvReviews, isLoading: isMovieReviewsLoading } =
 		useQuery<IGetReviews>(["tvReviewsResult", clickedTvId], () =>
 			fetchData({
@@ -566,7 +436,6 @@ function TvModal() {
 				id: Number(clickedTvId),
 			})
 		);
-	console.log("reviews", tvReviews);
 	const { data: tvCreditsResult } = useQuery<IGetCredits>(
 		["tvCreditResult", clickedTvId],
 		() =>
@@ -576,7 +445,6 @@ function TvModal() {
 				id: Number(clickedTvId),
 			})
 	);
-	console.log("tvCredits", tvCreditsResult);
 	const lastSeasonNumber =
 		tvDetailResult?.seasons?.[tvDetailResult.seasons.length - 1]
 			?.season_number ?? 1;
@@ -594,7 +462,6 @@ function TvModal() {
 	);
 
 	const [latestSeason, setLatestSeason] = useState(1);
-	console.log("tvSeasonData", tvSeasonData);
 	const latestSeasonData = tvSeasonData?.episodes
 		.filter((episode) => episode.overview !== "")
 		.slice(-5)
@@ -604,19 +471,27 @@ function TvModal() {
 		reviews = tvReviews.results;
 	}
 
-	console.log("credits", tvCreditsResult);
 	const [logoExists, setLogoExists] = useState(false);
 	const [movieImagesExists, setMovieImagesExists] = useState(false);
 
-	const clickedTv = moviePathMatch?.params.tvId && tvDetailResult;
-	console.log("clickedMovie", clickedTv);
+	const clickedTv =
+		(moviePathMatch?.params.tvId || searchPathMatch?.params.tvId) &&
+		tvDetailResult;
 	const [mainCast, setMainCast] = useState<Cast[]>([]);
 	let newMainCast = undefined;
 	if (tvCreditsResult) {
 		newMainCast = tvCreditsResult.cast.slice(0, 12);
 	}
 	const onModalClose = () => {
-		navigate("/tv");
+		console.log("on modal close", keyword);
+		if (keyword) {
+			navigate({
+				pathname: `/search`,
+				search: `?keyword=${keyword}`,
+			});
+		} else {
+			navigate(`/tv`);
+		}
 	};
 	useEffect(() => {
 		if (tvImages) {
@@ -637,7 +512,7 @@ function TvModal() {
 		}
 	}, [logoExists, tvImages, tvCreditsResult, tvDetailResult]);
 	const movieImageLogoExist = logoExists && tvImages;
-	console.log(reviews);
+	console.log("reviews", reviews);
 	const sectionHeights = {
 		cast: "40vh",
 		review: "40vh",
@@ -655,7 +530,7 @@ function TvModal() {
 		<>
 			<GlobalStyle />
 			<AnimatePresence>
-				{moviePathMatch ? (
+				{moviePathMatch || searchPathMatch ? (
 					<>
 						<Overlay
 							onClick={onModalClose}
@@ -699,7 +574,10 @@ function TvModal() {
 															new Date(clickedTv.first_air_date).getFullYear()}
 													</span>
 													<span>
-														{formatGenres(clickedTv.genres, " / ")}
+														{formatGenres({
+															format: " / ",
+															inputObjList: clickedTv.genres,
+														})}
 														{clickedTv.production_countries[0] &&
 															`\u00A0\u00A0\u2022\u00A0\u00A0${formatCountry(
 																clickedTv.production_countries[0]

@@ -96,7 +96,7 @@ const Circle = styled(motion.span)`
 	width: 6px;
 	height: 6px;
 	border-radius: 100%;
-	background-color: ${(props) => props.theme.white.darker};
+	background-color: ${(props) => props.theme.white.lighter};
 	bottom: -12px;
 `;
 

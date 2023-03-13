@@ -1,7 +1,9 @@
 import { type } from "os";
 
+export const API_KEY = "3a80f7f28c20df567800b2cbc5e55a54";
+export const BASE_PATH = "https://api.themoviedb.org/3";
 export const OFF_SET = 6;
-export const HERO_ID = 313369; //569094 324857 843 198375 120467  475557 122906  313369
+export const HERO_ID = 313369; //569094 324857 843 198375 120467  475557 122906  313369 (lala) 705996 (decision to leave)
 export const HERO_TV_ID = 110382; // 112486 110382 75820
 export const SLIDER_MARGIN = -window.innerHeight * 0.05;
 export const NETFLIX_LOGO_URL =
@@ -31,6 +33,7 @@ export enum Endpoint {
 	details = "",
 	reviews = "/reviews",
 	seasons = "/season/{season_num}",
+	search = "/search/multi",
 }
 
 export enum TvGenreIds {
@@ -72,6 +75,10 @@ export enum MovieGenreIds {
 	thriller = "53",
 	war = "10752",
 	western = "37",
+}
+
+export interface IGenreIdResult {
+	genres: { id: number; name: string }[];
 }
 
 export interface IFavMovieIDs {

@@ -2,20 +2,26 @@ import { useQuery } from "react-query";
 import { IGetMovieDetailResult } from "./Interfaces/API/IGetDetails/IGetMovieDetail";
 import { IGetMovieImagesResult } from "./Interfaces/API/IGetImages";
 import { IGetResult } from "./Interfaces/API/IGetResults";
-import { Endpoint, IFavMovie, QueryMediaType } from "./utils/consts";
-
-export const API_KEY = "3a80f7f28c20df567800b2cbc5e55a54";
-export const BASE_PATH = "https://api.themoviedb.org/3";
+import { MediaType } from "./Interfaces/API/IGetSearchResults";
+import {
+	API_KEY,
+	BASE_PATH,
+	Endpoint,
+	IFavMovie,
+	IGenreIdResult,
+	QueryMediaType,
+} from "./utils/consts";
 
 interface IFetchData {
 	endpoint: string;
-	mediaType?: QueryMediaType.movie | QueryMediaType.tv;
+	mediaType?: string;
 	id?: number;
 	originalLanguage?: string;
 	seasonNum?: number;
 	genre?: string;
 	originalCountry?: string;
 	people?: string;
+	query?: string;
 }
 
 export function fetchData({
@@ -27,6 +33,7 @@ export function fetchData({
 	genre,
 	originalCountry,
 	people,
+	query,
 }: IFetchData) {
 	let url = `${BASE_PATH}`;
 	if (endpoint === Endpoint.discover) {
@@ -73,6 +80,9 @@ export function fetchData({
 	}
 	if (genre || people) {
 		url += `&sort_by=popularity.desc&include_adult=${false}`;
+	}
+	if (endpoint === Endpoint.search && query) {
+		url += `&query=${query.replace(" ", "%20")}`;
 	}
 
 	console.log("api url", endpoint, url);
@@ -262,3 +272,21 @@ export function getSearchResults(query: string) {
 		`${BASE_PATH}/search/multi?api_key=${API_KEY}&query=${query}`
 	).then((response) => response.json());
 }
+
+export function getGenreIdList(mediaType: string) {
+	return fetch(`${BASE_PATH}/genre/${mediaType}/list?api_key=${API_KEY}`).then(
+		(response) => response.json()
+	);
+}
+
+export const useGetGenreIdList = () => {
+	const { data: movieGenreIdList } = useQuery<IGenreIdResult>(
+		["movie", "genreIDs"],
+		() => getGenreIdList("movie")
+	);
+	const { data: tvGenreIdList } = useQuery<IGenreIdResult>(
+		["tv", "genreIDs"],
+		() => getGenreIdList("tv")
+	);
+	return { movieGenreIdList, tvGenreIdList };
+};

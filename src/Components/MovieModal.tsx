@@ -501,11 +501,25 @@ function isTvRecommend(recommend: any): recommend is ITvRecommendsResult {
 
 function MovieModal() {
 	let mediaType = QueryMediaType.movie;
+	const keyword = useOutletContext();
 	const navigate = useNavigate();
-	const onRecommendClick = (movieId: string) => navigate(`/movies/${movieId}`);
+	const onRecommendClick = (movieId: string) => {
+		if (keyword) {
+			navigate({
+				pathname: `/search/movies/${movieId}`,
+				search: `?keyword=${keyword}`,
+			});
+		} else {
+			navigate(`/movies/${movieId}`);
+		}
+	};
 	const moviePathMatch: PathMatch<string> | null = useMatch("/movies/:movieId");
+	const searchPathMatch: PathMatch<string> | null = useMatch(
+		"/search/movies/:movieId"
+	);
 	console.log(moviePathMatch);
-	const clickedMovieId = moviePathMatch?.params.movieId;
+	const clickedMovieId =
+		moviePathMatch?.params.movieId || searchPathMatch?.params.movieId;
 	const { data: movieDetailResult } = useQuery<IGetMovieDetailResult>(
 		["movieDetailResult", clickedMovieId],
 		() =>
@@ -565,11 +579,21 @@ function MovieModal() {
 	const [logoExists, setLogoExists] = useState(false);
 	const [movieImagesExists, setMovieImagesExists] = useState(false);
 
-	const clickedMovie = moviePathMatch?.params.movieId && movieDetailResult;
+	const clickedMovie =
+		(moviePathMatch?.params.movieId || searchPathMatch?.params.movieId) &&
+		movieDetailResult;
 	const { scrollY } = useScroll();
 
 	const onModalClose = () => {
-		navigate("/");
+		console.log("on modal close", keyword);
+		if (keyword) {
+			navigate({
+				pathname: `/search`,
+				search: `?keyword=${keyword}`,
+			});
+		} else {
+			navigate(`/`);
+		}
 	};
 	useEffect(() => {
 		if (movieImages) {
@@ -590,7 +614,7 @@ function MovieModal() {
 		<>
 			<GlobalStyle />
 			<AnimatePresence>
-				{moviePathMatch ? (
+				{moviePathMatch || searchPathMatch ? (
 					<>
 						<Overlay
 							onClick={onModalClose}
@@ -634,7 +658,10 @@ function MovieModal() {
 														{new Date(clickedMovie.release_date).getFullYear()}
 													</span>
 													<span>
-														{formatGenres(clickedMovie.genres, " / ")}
+														{formatGenres({
+															format: " / ",
+															inputObjList: clickedMovie.genres,
+														})}
 														{clickedMovie.production_countries[0] &&
 															`\u00A0\u00A0\u2022\u00A0\u00A0${formatCountry(
 																clickedMovie.production_countries[0]
