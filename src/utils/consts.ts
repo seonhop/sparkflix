@@ -94,37 +94,6 @@ export interface IFavMovie {
 export const favMovies: IFavMovie = {
 	results: [
 		{
-			title: "Lady Bird",
-			id: 391713,
-			original_language: "en",
-		},
-		{
-			title: "Titanic", //Mood Indigo
-			id: 597,
-			original_language: "en",
-		},
-		{
-			title: "Eternal Sunshine of the Spotless Mind",
-			id: 38,
-			original_language: "en",
-		},
-		{
-			title: "The Silence of the Lambs",
-			id: 274,
-			original_language: "en",
-		},
-		{
-			title: "Everything Everywhere All at Once",
-			id: 545611,
-			original_language: "en",
-		},
-
-		{
-			title: "Ford v Ferrari", //The Usual Suspects
-			id: 359724, // 629
-			original_language: "en",
-		},
-		{
 			title: "Her",
 			id: 152601,
 			original_language: "en",
@@ -148,8 +117,8 @@ export const favMovies: IFavMovie = {
 		},
 
 		{
-			title: "Kill Bill: The Whole Bloody Affair",
-			id: 414419,
+			title: "Everything Everywhere All at Once",
+			id: 545611,
 			original_language: "en",
 		},
 		{
@@ -185,8 +154,39 @@ export const favMovies: IFavMovie = {
 			original_language: "en",
 		},
 		{
-			title: "3 Idiots",
+			title: "Top Gun",
 			id: 361743,
+			original_language: "en",
+		},
+		{
+			title: "Lady Bird",
+			id: 391713,
+			original_language: "en",
+		},
+		{
+			title: "Titanic", //Mood Indigo
+			id: 597,
+			original_language: "en",
+		},
+		{
+			title: "Eternal Sunshine of the Spotless Mind",
+			id: 38,
+			original_language: "en",
+		},
+		{
+			title: "The Silence of the Lambs",
+			id: 274,
+			original_language: "en",
+		},
+		{
+			title: "Mood Indigo",
+			id: 157820,
+			original_language: "en",
+		},
+
+		{
+			title: "Ford v Ferrari", //The Usual Suspects
+			id: 359724, // 629
 			original_language: "en",
 		},
 
