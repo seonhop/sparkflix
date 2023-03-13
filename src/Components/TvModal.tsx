@@ -527,7 +527,7 @@ function TvModal() {
 			.slice(-5)
 			.reverse()
 	);
-
+	console.log("tvRecommends exist", tvRecommends);
 	return (
 		<>
 			<GlobalStyle />

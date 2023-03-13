@@ -118,7 +118,7 @@ const HeroButtonContainer = styled.div`
 	margin-top: 3vh;
 	div {
 		display: flex;
-		padding: 12px 16px;
+		padding: 8px 16px;
 		border-radius: 8px;
 		justify-content: center;
 		align-items: center;
@@ -299,7 +299,7 @@ function Home() {
 									</div>
 									<div onClick={onHeroClick}>
 										<span className="material-icons-outlined">info</span>{" "}
-										<span>Info</span>
+										<span>More Info</span>
 									</div>
 								</HeroButtonContainer>
 							</HeroTitleContainer>

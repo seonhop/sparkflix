@@ -59,6 +59,7 @@ const BoxImgContainer = styled(motion.div)<{
 	id: string;
 	src: string;
 	noBackdrop: boolean;
+	titleLen: number;
 }>`
 	position: relative;
 	background-image: url(src);
@@ -297,6 +298,13 @@ export function MovieTvBox({
 				: mediaItem.title
 			: "never mind"
 	);
+	const titleLen = isMovieDetail(mediaItem)
+		? mediaItem.title.length
+		: isTvDetail(mediaItem)
+		? mediaItem.name.length
+		: (mediaItem.name && mediaItem.name.length) ||
+		  (mediaItem.title && mediaItem.title.length) ||
+		  0;
 	return (
 		<Box
 			variants={boxVariants}
@@ -319,6 +327,7 @@ export function MovieTvBox({
 					mediaItem.backdrop_path || mediaItem.poster_path,
 					"w500"
 				)}
+				titleLen={titleLen}
 			>
 				<img
 					src={makeImagePath(mediaItem.backdrop_path || mediaItem.poster_path)}

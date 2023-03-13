@@ -38,6 +38,9 @@ const Logo = styled(motion.svg)`
 		stroke-width: 6px;
 		stroke: black;
 	}
+	:hover {
+		cursor: pointer;
+	}
 `;
 
 const logoVariants = {
