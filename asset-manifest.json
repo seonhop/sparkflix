@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/netflix/static/js/main.e69dadab.js",
-    "index.html": "/netflix/index.html",
-    "main.e69dadab.js.map": "/netflix/static/js/main.e69dadab.js.map"
+    "main.js": "/sparkflix/static/js/main.87b17f18.js",
+    "index.html": "/sparkflix/index.html",
+    "main.87b17f18.js.map": "/sparkflix/static/js/main.87b17f18.js.map"
   },
   "entrypoints": [
-    "static/js/main.e69dadab.js"
+    "static/js/main.87b17f18.js"
   ]
 }
