@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/sparkflix/static/js/main.d54b633a.js",
+    "main.js": "/sparkflix/static/js/main.42bc7364.js",
     "index.html": "/sparkflix/index.html",
-    "main.d54b633a.js.map": "/sparkflix/static/js/main.d54b633a.js.map"
+    "main.42bc7364.js.map": "/sparkflix/static/js/main.42bc7364.js.map"
   },
   "entrypoints": [
-    "static/js/main.d54b633a.js"
+    "static/js/main.42bc7364.js"
   ]
 }
